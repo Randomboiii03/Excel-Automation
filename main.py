@@ -55,6 +55,7 @@ def index():
                                 break
                         if not isSame:
                             output_list.append("")
+                    # Add unique columns from original file that are not in template header
                     for key, value in zip(keys, values):
                         if key not in template_header:
                             output_list.append(value)
