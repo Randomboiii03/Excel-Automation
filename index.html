@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Selection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+   <div class="form-container">
+        <h1>Select a Campaign</h1>
+        <form id="campaignForm">
+            <label for="campaign_choice">Campaign:</label>
+            <select name="campaign_choice" id="campaign_choice">
+                <option value="maya">Maya</option>
+                <option value="bpi">BPI</option>
+                <option value="bdo">BDO</option>
+            </select>
+            <button type="button" onclick="submitForm()">Submit</button>
+        </form>
+   </div>
+
+    <script>
+        function submitForm() {
+            var selectedCampaign = document.getElementById("campaign_choice").value;
+            var formData = new FormData();
+            formData.append("campaign_choice", selectedCampaign);
+
+            fetch("/", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // Display the response message from the backend
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
