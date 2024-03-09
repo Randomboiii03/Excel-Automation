@@ -4,6 +4,7 @@ from fuzzywuzzy import fuzz
 from flask import Flask, render_template, request
 import random
 from datetime import datetime
+import json
 
 app = Flask(__name__)
 
@@ -37,6 +38,29 @@ def map_header(header, mapping):
         if compare_string(header, key):
             return value
     return header
+
+def fill_missing_values(excel_file_path, campaign_file_path):
+    with open(campaign_file_path, 'r') as file:
+        campaign_data = json.load(file)
+    
+    excel_data = pd.read_excel(excel_file_path)
+    for index, row in excel_data.iterrows():
+        if pd.isna(row['BANK']):
+            ch_code = str(row['CH CODE'])[:6]  # Get first 6 characters of CH CODE
+            if ch_code in campaign_data:
+                excel_data.at[index, 'BANK'] = campaign_data[ch_code]['BANK']
+        if pd.isna(row['PLACEMENT']):
+            ch_code = str(row['CH CODE'])[:6]  # Get first 6 characters of CH CODE
+            if ch_code in campaign_data:
+                excel_data.at[index, 'PLACEMENT'] = campaign_data[ch_code]['PLACEMENT']
+    
+    excel_data.to_excel(excel_file_path, index=False)
+
+
+
+
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -91,6 +115,9 @@ def index():
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
         output_file_path = os.path.join("C:\\Users\\Shiroe\\Music\\BANK LIST", output_file_name)
         output_work_book.to_excel(output_file_path, index=False)
+
+        campaign_file_path = 'test.json'
+        fill_missing_values(output_file_path, campaign_file_path)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_name}</strong>"
 
