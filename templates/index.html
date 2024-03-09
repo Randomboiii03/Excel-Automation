@@ -44,9 +44,9 @@
           id="bank_name"
           class="block w-full border-gray-500 border-2 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-poppins py-2 px-2"
         >
-          <option value="BPI">BPI</option>
-          <option value="BDO">BDO</option>
-          <option value="BSP">BSP</option>
+          {% for bank_name in bank_names %}
+            <option value="{{ bank_name }}">{{ bank_name }}</option>
+          {% endfor %}
         </select>
         <button
           type="submit"

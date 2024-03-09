@@ -41,6 +41,11 @@ def map_header(header, mapping):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     message = None
+    bank_names = []
+    for dirpath, dirnames, filenames in os.walk("C:\\Users\\Shiroe\\Music\\BANK LIST"):
+        bank_names.extend(dirnames)
+        break  # Only the top-level directories are needed
+
     if request.method == 'POST':
         bank_name = request.form['bank_name']
         folder_path = os.path.join("C:\\Users\\Shiroe\\Music\\BANK LIST", bank_name)
@@ -89,7 +94,7 @@ def index():
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_name}</strong>"
 
-    return render_template('index.html', message=message)
+    return render_template('index.html', message=message, bank_names=bank_names)
 
 if __name__ == '__main__':
     app.run(debug=True)
