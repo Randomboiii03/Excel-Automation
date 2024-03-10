@@ -154,17 +154,14 @@ def index():
                    # Append missing columns from the file
                     for col_header in row.keys():
                         mapped_header = map_header(col_header, mapping)
-                        if mapped_header.lower() not in [h.lower() for h in template_header] and mapped_header not in existing_headers and compare_string(mapped_header, col_header):
-                            datas[0].append(mapped_header)
-                            output_row.append(row[col_header])
-                            existing_headers.add(mapped_header)
-                        # if mapped_header and mapped_header not in template_header and not (col_header.strip() == "" or col_header.startswith("Unnamed")) and compare_string(mapped_header, col_header):
+                        # if mapped_header.lower() not in [h.lower() for h in template_header] and mapped_header not in existing_headers and compare_string(mapped_header, col_header):
                         #     datas[0].append(mapped_header)
                         #     output_row.append(row[col_header])
                         #     existing_headers.add(mapped_header)
-
-
-
+                        if mapped_header.lower() not in [h.lower() for h in template_header] and mapped_header not in existing_headers and not (col_header.strip() == "" or col_header.startswith("Unnamed")) and compare_string(mapped_header, col_header):
+                            datas[0].append(mapped_header)
+                            output_row.append(row[col_header])
+                            existing_headers.add(mapped_header)
 
         output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
         random_number = "".join([str(random.randint(0, 9)) for _ in range(4)])
