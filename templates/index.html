@@ -23,12 +23,62 @@
             right: 0;
         }
     </style>
+     <script
+     src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+     integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+     crossorigin="anonymous"
+   ></script>
+   <script type="text/javascript">
+     window.onload = function () {
+       const socket = io();
+
+       socket.connect("http://localhost:25565");
+
+       let progressBar = document.getElementById("progressBar");
+       let progressText = document.getElementById("progressText");
+
+       socket.on("connect", function () {
+         console.log("Connected!");
+       });
+
+       socket.on("update progress", function (percent) {
+         console.log("Got percent: " + percent);
+
+         progressBar.style.width = percent + "%";
+         progressText.textContent = percent + "%";
+       });
+
+       let mergeForm = document.getElementById("mergeForm");
+       mergeForm.onsubmit = function (event) {
+         event.preventDefault();
+
+         let formData = new FormData(mergeForm);
+
+         fetch("/merge", {
+           method: "POST",
+           body: formData,
+         })
+           .then((response) => response.json())
+           .then((data) => {
+             document.getElementById("message").classList.remove("hidden");
+             document.getElementById("mergeButton").classList.remove("hidden");
+             document.getElementById("progress").classList.add("hidden");
+             document.getElementById("messageText").innerHTML = data.message;
+           })
+           .catch((error) => {
+             console.error("Error:", error);
+             // Handle errors here
+           });
+       };
+     };
+   </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center overflow-hidden">
+  <img src="/static/spmlogo2.png" alt="bg" style="position: absolute; left: 50%; top: 20%; transform: translate(-50%, -50%); width: 450px; height: 120px; margin-bottom: auto;">
   <img src="{{ url_for('static', filename='bg1.png.png') }}" alt="bg" style="position: absolute; left: 0;">
   <img src="{{ url_for('static', filename='left.png') }}" alt="bg" style="position: absolute; right: 0;">  
-    <div class="bg-white p-8 rounded-md shadow-md max-w-sm w-full border-4 border-indigo-900  max-h-full" style="box-shadow: 5px 10px  #628DB8;  border-color:#0b3969; border-radius: 10px; border-style: solid; padding:20px;  width: 350px; height: auto;">
-        <h1 class="text-2xl font-bold mb-4 text-center font-poppins">MergeIT</h1>
+    <div class="bg-white p-8 rounded-md shadow-md max-w-sm w-full border-4 border-indigo-900  max-h-full" style="box-shadow: 10px 15px  #628DB8;  border-color:#0b3969; border-radius: 10px; border-style: solid; padding:20px;  width: 350px; height: auto; ">
+        <h1 class="text-2xl font mb-4 text-center font-poppins text-Slate-700">MergeIT</h1>
         <!-- {% if message %}
         <div
             id="message"
@@ -67,47 +117,30 @@
                 <span id="progressText" class="ml-2 text-indigo-500">0%</span>
             </div>
         </div>
-        {% if message %}
         <div
-            id="message"
-            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-            role="alert"
+          id="message"
+          class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative hidden"
+          role="alert"
         >
-            <strong class="font-bold text-xs">Success!</strong>
-            <span class="block sm:inline text-xs" style="white-space: pre-wrap"
-                >{{ message | safe }}</span
-            >
+          <strong class="font-bold text-xs">Success!</strong>
+          <span
+            id="messageText"
+            class="block sm:inline text-xs"
+            style="white-space: pre-wrap"
+          ></span>
         </div>
-        {% endif %}
-    </form>
-</div>
-
+      </form>
     </div>
-
     <script>
-        document
-            .getElementById("mergeButton")
-            .addEventListener("click", function () {
-                document.getElementById("mergeButton").classList.add("hidden");
-                document.getElementById("progress").classList.remove("hidden");
+      document
+        .getElementById("mergeButton")
+        .addEventListener("click", function () {
+          document.getElementById("mergeButton").classList.add("hidden");
+          document.getElementById("progress").classList.remove("hidden");
 
-                let progressBar = document.getElementById("progressBar");
-                let progressText = document.getElementById("progressText");
-                let percent = 0;
-
-                let interval = setInterval(function () {
-                    percent += 1;
-                    progressBar.style.width = percent + "%";
-                    progressText.textContent = percent + "%";
-
-                    if (percent >= 100) {
-                        clearInterval(interval);
-                    }
-                }, 50); // Adjust the interval for smoother progress
-
-                // Hide the message when the form is submitted again
-                document.getElementById("message").classList.add("hidden");
-            });
+          // Hide the message when the form is submitted again
+          document.getElementById("message").classList.add("hidden");
+        });
     </script>
-</body>
+  </body>
 </html>
