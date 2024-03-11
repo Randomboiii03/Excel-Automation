@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 import json
 import re
+from openpyxl import load_workbook
 
 app = Flask(__name__)
 
@@ -112,17 +113,26 @@ def extract_address(output_file_path, address_column_name, output_address_file_p
     address_data = output_data[address_column_name].dropna()
     address_data.to_excel(output_address_file_path, index=False)
 
+def auto_fit_columns(excel_file_path):
+    wb = load_workbook(excel_file_path)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        for column_cells in ws.columns:
+            length = max(len(str(cell.value)) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = length + 2  # Add some padding
+    wb.save(excel_file_path)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     message = None
     bank_names = []
-    for dirpath, dirnames, filenames in os.walk("C:\\Users\\Shiroe\\Music\\BANK LIST"):
+    for dirpath, dirnames, filenames in os.walk("C:\\Users\\SPM\Desktop\\ONLY SAVE FILE HERE\\SIT-OJT\\Requests"):
         bank_names.extend(dirnames)
         break  # Only the top-level directories are needed
 
     if request.method == 'POST':
         bank_name = request.form['bank_name']
-        folder_path = os.path.join("C:\\Users\\Shiroe\\Music\\BANK LIST", bank_name)
+        folder_path = os.path.join("C:\\Users\\SPM\Desktop\\ONLY SAVE FILE HERE\\SIT-OJT\\Requests", bank_name)
         files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
         template_header = get_template_header("Template.xlsx")
         datas = [template_header]
@@ -167,7 +177,7 @@ def index():
         random_number = "".join([str(random.randint(0, 9)) for _ in range(4)])
         current_date = datetime.now().strftime("%Y-%m-%d")
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_file_path = os.path.join("C:\\Users\\Shiroe\\Music\\BANK LIST", output_file_name)
+        output_file_path = os.path.join("C:\\Users\\SPM\Desktop\\ONLY SAVE FILE HERE\\SIT-OJT\\Merged", output_file_name)
         output_work_book.to_excel(output_file_path, index=False)
 
         campaign_file_path = 'campaign_list.json' 
@@ -175,10 +185,15 @@ def index():
 
         address_column_name = "ADDRESS"  # Replace with the actual column name containing the address
         output_address_file_name = f"Output-Address-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_address_file_path = os.path.join("C:\\Users\\Shiroe\\Music\\BANK LIST", output_address_file_name)
+        output_address_file_path = os.path.join("C:\\Users\\SPM\Desktop\\ONLY SAVE FILE HERE\\SIT-OJT\\Merged\\Area", output_address_file_name)
         extract_address(output_file_path, address_column_name, output_address_file_path)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_name}</strong>. Address file: <strong>{output_address_file_name}</strong>"
+
+          # Call auto_fit_columns function after saving the Excel file
+        auto_fit_columns(output_file_path)
+        auto_fit_columns(output_address_file_path)
+        
 
     return render_template('index.html', message=message, bank_names=bank_names)
 
