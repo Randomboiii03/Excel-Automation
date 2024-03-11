@@ -158,6 +158,8 @@ def merge():
 
     total_files = len(files)
 
+    socketio.emit("update progress", 0)
+
     for i, file in enumerate(files):
         excel_file_path = os.path.join(folder_path, file)
         index_header, current_header = get_index_of_header(excel_file_path, template_header)
@@ -187,7 +189,13 @@ def merge():
                         output_row.append(row[col_header])
                         existing_headers.add(mapped_header)
 
-            socketio.emit("update progress", (i + 1) / (total_files + 1) * 100)
+        # precentage = (i + 1) / (total_files + 1) * 100
+
+        # for progress in range(int(update_progress), int(precentage) + 1):
+        #     sleep(0.5)
+        socketio.emit("update progress", (i + 1) / (total_files + 1) * 100)
+
+        # update_progress = precentage
 
     output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
     random_number = "".join([str(random.randint(0, 9)) for _ in range(4)])

@@ -26,6 +26,11 @@
 
         let progressBar = document.getElementById("progressBar");
         let progressText = document.getElementById("progressText");
+        
+        let mergeButton = document.getElementById("mergeButton");
+        let progressContainer = document.getElementById("progress");
+        let messageContainer = document.getElementById("message");
+        let messageText = document.getElementById("messageText");
 
         socket.on("connect", function () {
           console.log("Connected!");
@@ -34,11 +39,27 @@
         socket.on("update progress", function (percent) {
           console.log("Got percent: " + percent);
 
-          progressBar.style.width = percent + "%";
-          progressText.textContent = percent + "%";
+          animateProgress(percent);
         });
 
+        function animateProgress(targetPercent) {
+          let currentPercent = parseFloat(progressBar.style.width) || 0;
+
+          let step = (targetPercent - currentPercent) / 20;
+
+          let interval = setInterval(function () {
+            currentPercent += step;
+            progressBar.style.width = currentPercent + "%";
+            progressText.textContent = Math.round(currentPercent) + "%";
+
+            if (currentPercent >= targetPercent) {
+              clearInterval(interval);
+            }
+          }, 50);
+        }
+
         let mergeForm = document.getElementById("mergeForm");
+
         mergeForm.onsubmit = function (event) {
           event.preventDefault();
 
@@ -50,16 +71,27 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              document.getElementById("message").classList.remove("hidden");
-              document.getElementById("mergeButton").classList.remove("hidden");
-              document.getElementById("progress").classList.add("hidden");
-              document.getElementById("messageText").innerHTML = data.message;
+              messageContainer.classList.remove("hidden");
+              mergeButton.classList.remove("hidden");
+              progressContainer.classList.add("hidden");
+              messageText.innerHTML = data.message;
             })
             .catch((error) => {
               console.error("Error:", error);
-              // Handle errors here
             });
         };
+
+        document
+          .getElementById("mergeButton")
+          .addEventListener("click", function () {
+            mergeButton.classList.add("hidden");
+            progressContainer.classList.remove("hidden");
+
+            progressBar.style.width = 0 + "%";
+            progressText.textContent = Math.round(0) + "%";
+
+            messageContainer.classList.add("hidden");
+          });
       };
     </script>
     <style>
@@ -138,8 +170,11 @@
         </button>
         <div id="progress" class="hidden mt-4">
           <div class="flex justify-center items-center">
-            <div id="progressBar" class="h-2 bg-indigo-500 rounded"></div>
-            <span id="progressText" class="ml-2 text-indigo-500">0%</span>
+            <div
+              id="progressBar"
+              class="h-2 animate-pulse bg-indigo-500 rounded"
+            ></div>
+            <span id="progressText" class="ml-2 animate-pulse text-indigo-500">0%</span>
           </div>
         </div>
         <div
@@ -156,16 +191,5 @@
         </div>
       </form>
     </div>
-    <script>
-      document
-        .getElementById("mergeButton")
-        .addEventListener("click", function () {
-          document.getElementById("mergeButton").classList.add("hidden");
-          document.getElementById("progress").classList.remove("hidden");
-
-          // Hide the message when the form is submitted again
-          document.getElementById("message").classList.add("hidden");
-        });
-    </script>
   </body>
 </html>
