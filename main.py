@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 import re
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font
 
 app = Flask(__name__)
 
@@ -113,14 +114,30 @@ def extract_address(output_file_path, address_column_name, output_address_file_p
     address_data = output_data[address_column_name].dropna()
     address_data.to_excel(output_address_file_path, index=False)
 
+
 def auto_fit_columns(excel_file_path):
     wb = load_workbook(excel_file_path)
-    for sheet in wb.sheetnames:
-        ws = wb[sheet]
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
         for column_cells in ws.columns:
-            length = max(len(str(cell.value)) for cell in column_cells)
-            ws.column_dimensions[column_cells[0].column_letter].width = length + 2  # Add some padding
+            # Apply style to the header cells
+            header_fill = PatternFill(start_color="D4AC0D", end_color="D4AC0D", fill_type="solid")  # Gray color
+            header_font = Font(bold=True)
+            for cell in column_cells:
+                if cell.row == 1:  # Assuming header is in the first row
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    # Convert header text to uppercase
+                    cell.value = str(cell.value).upper()
+            # Auto-fit column width
+            max_length = max(len(str(cell.value)) for cell in column_cells)
+            adjusted_width = (max_length + 2) * 1.2  # Adjusted width with a factor for padding
+            ws.column_dimensions[column_cells[0].column_letter].width = adjusted_width
     wb.save(excel_file_path)
+
+
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
