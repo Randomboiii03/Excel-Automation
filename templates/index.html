@@ -1,35 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MergeIT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+      integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+      crossorigin="anonymous"
+    ></script>
+    <script type="text/javascript">
+      window.onload = function () {
+        const socket = io();
+
+        socket.connect("http://localhost:25565");
+
+        let progressBar = document.getElementById("progressBar");
+        let progressText = document.getElementById("progressText");
+
+        socket.on("connect", function () {
+          console.log("Connected!");
+        });
+
+        socket.on("update progress", function (percent) {
+          console.log("Got percent: " + percent);
+
+          progressBar.style.width = percent + "%";
+          progressText.textContent = percent + "%";
+        });
+
+        let mergeForm = document.getElementById("mergeForm");
+        mergeForm.onsubmit = function (event) {
+          event.preventDefault();
+
+          let formData = new FormData(mergeForm);
+
+          fetch("/merge", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById("message").classList.remove("hidden");
+              document.getElementById("mergeButton").classList.remove("hidden");
+              document.getElementById("progress").classList.add("hidden");
+              document.getElementById("messageText").innerHTML = data.message;
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              // Handle errors here
+            });
+        };
+      };
+    </script>
     <style>
-        body {
-            font-family: "Poppins", sans-serif;
-            background-image: url('left.png'); /* Add your background image url here */
-            background-size: cover; /* This will make sure the image covers the whole body */
-            background-repeat: no-repeat; /* This will prevent the image from repeating */
-        }
-        .left-image {
-            position: absolute;
-            left: 0;
-        }
-        .right-image {
-            position: absolute;
-            right: 0;
-        }
+      body {
+        font-family: "Poppins", sans-serif;
+        background-image: url("left.png"); /* Add your background image url here */
+        background-size: cover; /* This will make sure the image covers the whole body */
+        background-repeat: no-repeat; /* This will prevent the image from repeating */
+      }
+      .left-image {
+        position: absolute;
+        left: 0;
+      }
+      .right-image {
+        position: absolute;
+        right: 0;
+      }
     </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
-  <img src="{{ url_for('static', filename='bg1.png.png') }}" alt="bg" style="position: absolute; left: 0;">
-  <img src="{{ url_for('static', filename='left.png') }}" alt="bg" style="position: absolute; right: 0;">  
-    <div class="bg-white p-8 rounded-md shadow-md max-w-sm w-full border-4 border-indigo-900  max-h-full" style="box-shadow: 5px 10px  #628DB8;  border-color:#0b3969; border-radius: 10px; border-style: solid; padding:20px;  width: 350px; height: auto;">
-        <h1 class="text-2xl font-bold mb-4 text-center font-poppins">MergeIT</h1>
-        <!-- {% if message %}
+  </head>
+  <body
+    class="bg-gray-100 min-h-screen flex flex-col items-center justify-center"
+  >
+    <img
+      src="{{ url_for('static', filename='bg1.png.png') }}"
+      alt="bg"
+      style="position: absolute; left: 0"
+    />
+    <img
+      src="{{ url_for('static', filename='left.png') }}"
+      alt="bg"
+      style="position: absolute; right: 0"
+    />
+    <div
+      class="bg-white p-8 rounded-md shadow-md max-w-sm w-full border-4 border-indigo-900 max-h-full"
+      style="
+        box-shadow: 5px 10px #628db8;
+        border-color: #0b3969;
+        border-radius: 10px;
+        border-style: solid;
+        padding: 20px;
+        width: 350px;
+        height: auto;
+      "
+    >
+      <h1 class="text-2xl font-bold mb-4 text-center font-poppins">MergeIT</h1>
+      <!-- {% if message %}
         <div
             id="message"
             class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
@@ -42,72 +118,54 @@
         </div>
         {% endif %} -->
 
-       
-    <form id="mergeForm" method="POST" action="/" class="space-y-4">
+      <form id="mergeForm" method="POST" class="space-y-4">
         <label for="bank_name">Select Bank:</label>
         <select
-            name="bank_name"
-            id="bank_name"
-            class="block w-full border-gray-500 border-2 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-poppins py-2 px-2"
+          name="bank_name"
+          id="bank_name"
+          class="block w-full border-gray-500 border-2 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-poppins py-2 px-2"
         >
-            {% for bank_name in bank_names %}
-            <option value="{{ bank_name }}">{{ bank_name }}</option>
-            {% endfor %}
+          {% for bank_name in bank_names %}
+          <option value="{{ bank_name }}">{{ bank_name }}</option>
+          {% endfor %}
         </select>
         <button
-            type="submit"
-            id="mergeButton"
-            class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors duration-300 font-poppins"
+          type="submit"
+          id="mergeButton"
+          class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors duration-300 font-poppins"
         >
-            Merge Files
+          Merge Files
         </button>
         <div id="progress" class="hidden mt-4">
-            <div class="flex justify-center items-center">
-                <div id="progressBar" class="h-2 bg-indigo-500 rounded"></div>
-                <span id="progressText" class="ml-2 text-indigo-500">0%</span>
-            </div>
+          <div class="flex justify-center items-center">
+            <div id="progressBar" class="h-2 bg-indigo-500 rounded"></div>
+            <span id="progressText" class="ml-2 text-indigo-500">0%</span>
+          </div>
         </div>
-        {% if message %}
         <div
-            id="message"
-            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-            role="alert"
+          id="message"
+          class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative hidden"
+          role="alert"
         >
-            <strong class="font-bold text-xs">Success!</strong>
-            <span class="block sm:inline text-xs" style="white-space: pre-wrap"
-                >{{ message | safe }}</span
-            >
+          <strong class="font-bold text-xs">Success!</strong>
+          <span
+            id="messageText"
+            class="block sm:inline text-xs"
+            style="white-space: pre-wrap"
+          ></span>
         </div>
-        {% endif %}
-    </form>
-</div>
-
+      </form>
     </div>
-
     <script>
-        document
-            .getElementById("mergeButton")
-            .addEventListener("click", function () {
-                document.getElementById("mergeButton").classList.add("hidden");
-                document.getElementById("progress").classList.remove("hidden");
+      document
+        .getElementById("mergeButton")
+        .addEventListener("click", function () {
+          document.getElementById("mergeButton").classList.add("hidden");
+          document.getElementById("progress").classList.remove("hidden");
 
-                let progressBar = document.getElementById("progressBar");
-                let progressText = document.getElementById("progressText");
-                let percent = 0;
-
-                let interval = setInterval(function () {
-                    percent += 1;
-                    progressBar.style.width = percent + "%";
-                    progressText.textContent = percent + "%";
-
-                    if (percent >= 100) {
-                        clearInterval(interval);
-                    }
-                }, 50); // Adjust the interval for smoother progress
-
-                // Hide the message when the form is submitted again
-                document.getElementById("message").classList.add("hidden");
-            });
+          // Hide the message when the form is submitted again
+          document.getElementById("message").classList.add("hidden");
+        });
     </script>
-</body>
+  </body>
 </html>
