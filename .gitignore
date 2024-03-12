@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Secret keys
+instance/
+
+# Environment variables
+.env
+
+# Logs and databases
+*.log
+*.db
+
+# User uploaded files
+uploads/
+
+# Virtual environment
+venv/
