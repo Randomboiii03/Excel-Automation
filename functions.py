@@ -5,8 +5,6 @@ from openpyxl.styles import PatternFill, Font
 from openpyxl import load_workbook
 import pandas as pd
 import os
-import tkinter as tk
-from tkinter import messagebox
 
 # Function to get header from an Excel file
 def get_template_header(file_path):
