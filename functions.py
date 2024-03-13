@@ -76,13 +76,14 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
             column_index = df.columns.get_loc(column_name) + 1
             cell = sheet.cell(row=row_index + 2, column=column_index)
 
-            cell.fill = PatternFill(start_color="FFD3D3", end_color="FFD3D3", fill_type="solid")
             ch_code_match = re.search(r'^(\d+[A-Z]+)', str(row['CH CODE']))  # Extract first numbers and letters from CH CODE
 
             if ch_code_match is not None:
                 ch_code = ch_code_match.group(1)
                 if ch_code in campaign_data:
                     cell.value = campaign_data[ch_code][column_name]
+                else:
+                    cell.fill = PatternFill(start_color="FFD3D3", end_color="FFD3D3", fill_type="solid")
 
     # Apply cell styling for each header cell
     for row_index, row in df.iterrows():

@@ -11,6 +11,8 @@ from pathlib import Path
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+directory_path = os.path.join(os.path.expanduser("~"), "Desktop")
+
 @app.route('/delete', methods=['POST'])
 def delete():
     try:
@@ -18,7 +20,7 @@ def delete():
 
         data = request.json
         folder_path = data.get('data')
-        
+
         func.delete_requests_file(folder_path)
 
         bank_name = folder_path.split("\\")
@@ -27,17 +29,15 @@ def delete():
         data_to_return = {'message': message, 'status': status}
     except Exception as e:
         message = f"{e}"
-    
+
     data_to_return = {'message': message, 'status': status}
-        
+
     return jsonify(data_to_return)
 
 @app.route('/merge', methods=['POST'])
 def merge():
     try:
         status = False
-
-        directory_path = "C:\\Users\\SPM\\Desktop\\ONLY SAVE FILES HERE\\Requests"
 
         if not os.path.exists(directory_path):
             message = f"The system cannot find the path specified: {directory_path}"
@@ -46,9 +46,21 @@ def merge():
 
         bank_name = request.form['bank_name']
 
-        folder_path = os.path.join(directory_path, bank_name)
+        merge_excel_folder = os.path.join(directory_path, "Merge-Excel")
+        area_break_folder = os.path.join(directory_path, "Area Break")
+
+        if not os.path.exists(merge_excel_folder):
+            os.makedirs(merge_excel_folder)
+
+        if not os.path.exists(area_break_folder):
+            os.makedirs(area_break_folder)
+
+        folder_path = os.path.join(directory_path, "Requests", bank_name)
         files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f.endswith('.xlsx')]
-        
+
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
         if not files:
             message = f"No existing file inside {bank_name}"
             data_to_return = {'message': message, 'status': status}
@@ -101,31 +113,31 @@ def merge():
                             datas[0].append(mapped_header)
                             output_row.append(row[col_header])
                             existing_headers.add(mapped_header)
-                            
+
             set_progress((i + 1) / work_progress * 100)
 
         # Create the merge excel file
         output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
         random_number = "".join([str(random.randint(0, 9)) for _ in range(4)])
         current_date = datetime.now().strftime("%Y-%m-%d")
-        
+
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_file_path = os.path.join(directory_path, output_file_name)
+        output_file_path = os.path.join(merge_excel_folder, output_file_name)
         output_work_book.to_excel(output_file_path, index=False)
 
         set_progress((total_files + 1) / work_progress * 100)
-        
+
         # Clean and fill bank and placement if missing
         campaign_file_path = 'campaign_list.json' 
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, campaign_file_path)
-        
+
         set_progress((total_files + 2) / work_progress * 100)
-        
+
         # Compile addresses into one excel file
         address_column_name = "ADDRESS"
         output_address_file_name = f"Output-Address-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_address_file_path = os.path.join(directory_path, output_address_file_name)
+        output_address_file_path = os.path.join(area_break_folder, output_address_file_name)
         func.extract_address(output_file_path, address_column_name, output_address_file_path)
 
         set_progress((total_files + 3) / work_progress * 100)
@@ -135,7 +147,7 @@ def merge():
         func.auto_fit_columns(output_address_file_path)
 
         set_progress((total_files + 4) / work_progress * 100)
-        
+
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>. Address file: <strong><a href='file:///{output_address_file_path}' target='_blank'>{output_address_file_name}</a></strong>"
         status = True
 
@@ -150,15 +162,22 @@ def merge():
 
 @app.route('/', methods=['GET'])
 def index():
-    directory_path = "C:\\Users\\SPM\\Desktop\\ONLY SAVE FILES HERE\\Requests"
+    requests_folder = os.path.join(directory_path, "Requests")
 
-    if not os.path.exists(directory_path):
-        return render_template('index.html')   
+    message = "None"
+    status = False
 
-    # Get bank names using folder
-    bank_names = [folder.upper() for folder in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, folder))]
+    if not os.path.exists(requests_folder):
+        os.makedirs(requests_folder)
     
-    return render_template('index.html', bank_names=bank_names)
+    # Get bank names using folder
+    bank_names = [folder.upper() for folder in os.listdir(requests_folder) if os.path.isdir(os.path.join(requests_folder, folder))]
+
+    if not bank_names:
+        message = f"Please create folder for campaigns in <strong>{requests_folder}</strong>"
+        status = True
+
+    return render_template('index.html', bank_names=bank_names, no_error=status, message=message)
 
 if __name__ == '__main__':
-    socketio.run(app=app, debug=True, host="0.0.0.0", port=25565)
+    socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)
