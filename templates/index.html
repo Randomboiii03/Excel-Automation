@@ -1,90 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MergeIT</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/png" href="/static/spm-removebg-preview.png"> 
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script
-      src="https://cdn.socket.io/4.7.4/socket.io.min.js"
-      integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
-      crossorigin="anonymous"
-    ></script>
-    <script type="text/javascript">
-      window.onload = function () {
-        const socket = io();
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MergeIT</title>
+  <!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        socket.connect("http://localhost:25565");
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="icon" type="image/png" href="/static/spm-removebg-preview.png"> 
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+  <script
+    src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+    integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+    crossorigin="anonymous"
+  ></script>
+  <script type="text/javascript">
+    window.onload = function () {
+    const socket = io();
 
-        let progressBar = document.getElementById("progressBar");
-        let progressText = document.getElementById("progressText");
+    socket.connect("http://localhost:25565");
 
-        let mergeButton = document.getElementById("mergeButton");
-        let progressContainer = document.getElementById("progress");
-        let messageContainer = document.getElementById("message");
-        let messageText = document.getElementById("messageText");
+    let progressBar = document.getElementById("progressBar");
+    let progressText = document.getElementById("progressText");
+    
+    let mergeButton = document.getElementById("mergeButton");
+    let progressContainer = document.getElementById("progress");
+    let messageContainer = document.getElementById("message");
+    let messageText = document.getElementById("messageText");
 
-        socket.on("connect", function () {
-          console.log("Connected!");
-        });
+    socket.on("connect", function () {
+        console.log("Connected!");
+    });
 
-        socket.on("update progress", function (percent) {
-          console.log("Got percent: " + percent);
+    socket.on("update progress", function (percent) {
+        console.log("Got percent: " + percent);
 
-          animateProgress(percent);
-        });
+        animateProgress(percent);
+    });
 
-        function animateProgress(targetPercent) {
-          let currentPercent = parseFloat(progressBar.style.width) || 0;
+    function animateProgress(targetPercent) {
+        let currentPercent = parseFloat(progressBar.style.width) || 0;
 
-          let step = (targetPercent - currentPercent) / 20;
+        let step = (targetPercent - currentPercent) / 20;
 
-          let interval = setInterval(function () {
+        let interval = setInterval(function () {
             currentPercent += step;
             progressBar.style.width = currentPercent + "%";
             progressText.textContent = Math.round(currentPercent) + "%";
 
             if (currentPercent >= targetPercent) {
-              clearInterval(interval);
+                clearInterval(interval);
             }
-          }, 50);
-        }
+        }, 50);
+    }
 
-        let mergeForm = document.getElementById("mergeForm");
+    let mergeForm = document.getElementById("mergeForm");
 
-        mergeForm.onsubmit = function (event) {
-          event.preventDefault();
+    mergeForm.onsubmit = function (event) {
+        event.preventDefault();
 
-          let formData = new FormData(mergeForm);
+        let formData = new FormData(mergeForm);
 
-          fetch("/merge", {
+        fetch("/merge", {
             method: "POST",
             body: formData,
-          })
+        })
             .then((response) => response.json())
             .then((data) => {
-              messageContainer.classList.remove("hidden");
-              mergeButton.classList.remove("hidden");
-              progressContainer.classList.add("hidden");
-              messageText.innerHTML = data.message;
+                messageContainer.classList.remove("hidden");
+                mergeButton.classList.remove("hidden");
+                progressContainer.classList.add("hidden");
+                messageText.innerHTML = data.message;
             })
             .catch((error) => {
-              console.error("Error:", error);
+                console.error("Error:", error);
             });
-        };
+    };
 
-        document
-          .getElementById("mergeButton")
-          .addEventListener("click", function () {
+    document
+        .getElementById("mergeButton")
+        .addEventListener("click", function () {
             mergeButton.classList.add("hidden");
             progressContainer.classList.remove("hidden");
 
@@ -92,130 +95,160 @@
             progressText.textContent = Math.round(0) + "%";
 
             messageContainer.classList.add("hidden");
-          });
-      };
-    </script>
-    <style>
-      body {
-        font-family: "Poppins", sans-serif;
+        });
 
-        background-size: cover; 
-        background-repeat: no-repeat; 
+    window.addEventListener('keydown', function (event) {
+        if (event.keyCode === 116 && !document.getElementById("progress").classList.contains("hidden")) {
+            // Prevent default behavior
+            event.preventDefault();
+            event.returnValue = ''; // For older browsers
+            // Display SweetAlert confirmation
+            Swal.fire({
+                title: "Ongoing Merging Process",
+                text: "There is an ongoing merging process. Are you sure you want to leave?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, leave!",
+                cancelButtonText: "No, stay",
+                reverseButtons: true // To swap the positions of the buttons
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed with leaving
+                    location.reload();
+                } else {
+                    // Stay on the page
+                    // Do nothing
+                }
+            });
+        }
+    });
+    
+};
 
-      }
-      .left-image {
-        position: absolute;
-        left: 0;
+  </script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+    
+      background-size: cover; 
+      background-repeat: no-repeat; 
+    
+    }
+    .left-image {
+      position: absolute;
+      left: 0;
+      
+    }
+    .right-image {
+      position: absolute;
+      right: 0;
+      
+    }
+  </style>
+</head>
+<body
+class="bg-gray-100 min-h-screen flex flex-col items-center justify-center"
+style="
 
-      }
-      .right-image {
-        position: absolute;
-        right: 0;
-
-      }
-    </style>
-  </head>
-  <body
-  class="bg-gray-100 min-h-screen flex flex-col items-center justify-center"
-  style="
-
-  background: #ffffff;
-  background: -webkit-linear-gradient(242deg, #850202 0%, #ffffff 100%);
-  background: linear-gradient(242deg, #fdfdfd 0%, #caf4fa 100%);
-  backdrop-filter: blur(11px);"  
+background: #ffffff;
+background: -webkit-linear-gradient(242deg, #850202 0%, #ffffff 100%);
+background: linear-gradient(242deg, #fdfdfd 0%, #caf4fa 100%);
+backdrop-filter: blur(11px);"  
 
 
-  >
-    <!-- <img
-      src="{{ url_for('static', filename='bg1.png.png') }}"
-      alt="bg"
-      style="height: 100vh; width: 300px; position: absolute; left: 0 "
-    />
-    <img
-      src="{{ url_for('static', filename='left.png') }}"
-      alt="bg"
-      style="height: 100vh; width: 300px; position: absolute; right: 0"
-    /> -->
-    <img
-  src="{{ url_for('static', filename='Primary Logo.png') }}" 
-  alt="Logo"
-  style="position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: -1;  width: 300px; height: auto;"
+>
+  <!-- <img
+    src="{{ url_for('static', filename='bg1.png.png') }}"
+    alt="bg"
+    style="height: 100vh; width: 300px; position: absolute; left: 0 "
+  />
+  <img
+    src="{{ url_for('static', filename='left.png') }}"
+    alt="bg"
+    style="height: 100vh; width: 300px; position: absolute; right: 0"
+  /> -->
+  <img
+src="{{ url_for('static', filename='Primary Logo.png') }}" 
+alt="Logo"
+style="position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: -1;  width: 300px; height: auto;"
 />
-    <div
-      class="bg-white p-10 rounded-md shadow-md "
-      style="
+  <div
+    class="bg-white p-10 rounded-md shadow-md "
+    style="
+    
+    
+     background: rgba(255, 255, 255, 0.658);
+    -webkit-backdrop-filter: blur(11px);
+    backdrop-filter: blur(11px);
+    border: 1px solid rgba(255, 255, 255, 0.225);
+      border-radius: 10px;
+      box-shadow: 0 0 10px #413a3a;
 
+      border-style: solid;
+      width: 450px;
+      height: auto;
+      
+    "
+  >
+  <h1 class="text-2xl font-poppins text-center mb-6">MergeIT</h1>
 
-       background: rgba(255, 255, 255, 0.658);
-      -webkit-backdrop-filter: blur(11px);
-      backdrop-filter: blur(11px);
-      border: 1px solid rgba(255, 255, 255, 0.225);
-        border-radius: 10px;
-        box-shadow: 0 0 10px #413a3a;
-
-        border-style: solid;
-        width: 450px;
-        height: auto;
-
-      "
-    >
-    <h1 class="text-2xl font-poppins text-center mb-6">MergeIT</h1>
-
-      <!-- {% if message %}
-        <div
-            id="message"
-            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-            role="alert"
-        >
-            <strong class="font-bold text-xs">Success!</strong>
-            <span class="block sm:inline text-xs" style="white-space: pre-wrap"
-                >{{ message | safe }}</span
-            >
-        </div>
-        {% endif %} -->
-
-      <form id="mergeForm" method="POST" class="space-y-4">
-        <label for="bank_name">Select Bank:</label>
-        <select
-          name="bank_name"
-          id="bank_name"
-          class="block w-full rounded-md shadow-sm focus:border-gray-500 sm:text-sm font-poppins py-3 px-3 " style="border: 1px solid #413a3a;"
-        >
-
-
-          {% for bank_name in bank_names %}
-          <option value="{{ bank_name }}">{{ bank_name }}</option>
-          {% endfor %}
-        </select>
-        <button
-          type="submit"
-          id="mergeButton"
-          class="w-full bg-blue-900 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-300 font-poppins"
-        >
-          Merge Files
-        </button>
-        <div id="progress" class="hidden mt-4">
-          <div class="flex justify-center items-center">
-            <div
-              id="progressBar"
-              class="h-2 bg-blue-500 animate-pulse rounded"
-            ></div>
-            <span id="progressText" class="ml-2 text-blue-400 animate-pulse">0%</span>
-          </div>
-        </div>
-        <div
+    <!-- {% if message %}
+      <div
           id="message"
-          class="bg-green-100 border border-blue-400 text-blue-blue px-4 py-3 rounded relative hidden"
+          class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
           role="alert"
-        >
+      >
           <strong class="font-bold text-xs">Success!</strong>
-          <span
-            id="messageText"
-            class="block sm:inline text-xs"
-            style="white-space: pre-wrap"
-          ></span>
+          <span class="block sm:inline text-xs" style="white-space: pre-wrap"
+              >{{ message | safe }}</span
+          >
+      </div>
+      {% endif %} -->
+
+    <form id="mergeForm" method="POST" class="space-y-4">
+      <label for="bank_name">Select Bank:</label>
+      <select
+        name="bank_name"
+        id="bank_name"
+        class="block w-full rounded-md shadow-sm focus:border-gray-500 sm:text-sm font-poppins py-3 px-3 " style="border: 1px solid #413a3a;"
+      >
+      
+      
+        {% for bank_name in bank_names %}
+        <option value="{{ bank_name }}">{{ bank_name }}</option>
+        {% endfor %}
+      </select>
+      <button
+        type="submit"
+        id="mergeButton"
+        class="w-full bg-blue-900 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-300 font-poppins"
+      >
+        Merge Files
+      </button>
+      <div id="progress" class="hidden mt-4">
+        <div class="flex justify-center items-center">
+          <div
+            id="progressBar"
+            class="h-2 bg-blue-500 animate-pulse rounded"
+          ></div>
+          <span id="progressText" class="ml-2 text-blue-400 animate-pulse">0%</span>
         </div>
-      </form>
-    </div>
-  </body>
+      </div>
+      <div
+        id="message"
+        class="bg-green-100 border border-blue-400 text-blue-blue px-4 py-3 rounded relative hidden"
+        role="alert"
+      >
+        <strong class="font-bold text-xs">Success!</strong>
+        <span
+          id="messageText"
+          class="block sm:inline text-xs"
+          style="white-space: pre-wrap"
+        ></span>
+      </div>
+    </form>
+  </div>
+</body>
 </html>
