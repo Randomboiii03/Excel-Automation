@@ -7,6 +7,8 @@
     <title>MergeIT</title>
     <link rel="icon" type="image/png" href="./static/spm-removebg-preview.png"
      />
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+     />
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
       rel="stylesheet"
@@ -189,26 +191,29 @@
             event.preventDefault();
             event.returnValue = ""; // For older browsers
             // Display SweetAlert confirmation
-            Swal.fire({
-              title: "Ongoing Merging Process",
+                      Swal.fire({
+              // title: "Ongoing Merging Process",
               text: "There is an ongoing merging process. Are you sure you want to leave?",
-              icon: "warning",
+              iconHtml: '<i class="fa fa-refresh fa-spin" style="color:black;"></i>',
               showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, leave!",
+              confirmButtonColor: "#bf3232",
+              cancelButtonColor: "#05b531",
+              confirmButtonText: "Yes, leave",
               cancelButtonText: "No, stay",
               reverseButtons: true, // To swap the positions of the buttons
-            }).then((result) => {
+              customClass: {
+        popup: 'smaller-sweetalert', // Custom class for the popup
+    }
+          }).then((result) => {
               if (result.isConfirmed) {
-                // Proceed with leaving
-                location.reload();
+                  // Proceed with leaving
+                  location.reload();
               } else {
-                // Stay on the page
-                // Do nothing
+                  // Stay on the page
+                  // Do nothing
               }
-            });
-          }
+          });
+        }
         });
       };
     </script>
@@ -362,11 +367,11 @@
                   class="text-lg leading-6 font-medium text-gray-900"
                   id="modal-title"
                 >
-                  Process of dumping files
+                Dumping request files in this campaign.
                 </h3>
                 <div class="mt-2">
                   <p class="text-sm text-gray-500">
-                    This process is associated with this system, this action
+                    This process is associated with this system and this action
                     cannot be undone.
                   </p>
                 </div>
@@ -393,4 +398,12 @@
       </div>
     </div>
   </body>
+  <style>
+    .smaller-sweetalert {
+    max-width: 400px;
+    background-color: #ffffff;
+    border: 1px solid #413a3a;
+    
+}
+  </style>
 </html>
