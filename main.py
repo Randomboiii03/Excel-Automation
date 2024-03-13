@@ -117,9 +117,9 @@ def merge():
     # Generate success message with file links
     message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_address_file_path}' target='_blank'>{output_file_name}</a></strong>. Address file: <strong>{output_address_file_name}</strong>"
 
-    func.delete_requests_file(folder_path)
-    data_to_return = {'message': message, 'status': 'success'}
-
+    # func.delete_requests_file(folder_path)
+    data_to_return = {'message': message, 'status': 'success', 'file_path': folder_path}
+    
     return jsonify(data_to_return)
 
 # Route for the main page
@@ -131,6 +131,15 @@ def index():
     bank_names = [folder.upper() for folder in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, folder))]
 
     return render_template('index.html', bank_names=bank_names)
+
+# Route for deleting Excel files
+@app.route('/delete_requests/:file_path', methods=['POST'])
+def delete_requests(file_path):
+    files_to_delete = [f for f in os.listdir(file_path) if os.path.isfile(os.path.join(file_path, f))]
+    
+    for file_name in files_to_delete:
+        file_path = os.path.join(file_path, file_name)
+        os.remove(file_path)
 
 # Run the application with SocketIO support
 if __name__ == '__main__':
