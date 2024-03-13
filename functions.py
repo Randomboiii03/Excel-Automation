@@ -4,6 +4,7 @@ import re
 from openpyxl.styles import PatternFill, Font
 from openpyxl import load_workbook
 import pandas as pd
+import os
 
 # Function to get header from an Excel file
 def get_template_header(file_path):
@@ -134,3 +135,11 @@ def auto_fit_columns(excel_file_path):
 
     # Save the workbook
     wb.save(excel_file_path)
+
+# Function to delete all downloaded request files
+def delete_requests_file(folder_path):
+    files_to_delete = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    
+    for file_name in files_to_delete:
+        file_path = os.path.join(folder_path, file_name)
+        os.remove(file_path)

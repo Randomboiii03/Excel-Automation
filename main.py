@@ -117,6 +117,7 @@ def merge():
     # Generate success message with file links
     message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_address_file_path}' target='_blank'>{output_file_name}</a></strong>. Address file: <strong>{output_address_file_name}</strong>"
 
+    func.delete_requests_file(folder_path)
     data_to_return = {'message': message, 'status': 'success'}
 
     return jsonify(data_to_return)
