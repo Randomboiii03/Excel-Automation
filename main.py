@@ -173,11 +173,39 @@ def index():
     # Get bank names using folder
     bank_names = [folder.upper() for folder in os.listdir(requests_folder) if os.path.isdir(os.path.join(requests_folder, folder))]
 
-    if not bank_names:
-        message = f"Please create folder for campaigns in <strong>{requests_folder}</strong>"
-        status = True
+    escaped_requests_folder = requests_folder.replace('\\', '\\\\')
 
-    return render_template('index.html', bank_names=bank_names, no_error=status, message=message)
+    if not bank_names:
+        message = f"Please create folder for campaigns in <strong><span id='folderName'>{escaped_requests_folder}</span><i class='fa fa-copy copy-icon' style='cursor:pointer;margin-left:5px;' onclick='copyToClipboard(\"{escaped_requests_folder}\")'></i></strong></span>"
+        status = True
+        
+
+    # JavaScript function to copy the folder name to clipboard
+    javascript_function = """
+    <script>
+  function copyToClipboard(text) {
+    var tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    Swal.fire({
+        title: "Paste In file manager:",
+        text: text,
+        showCancelButton: false,
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK"
+    });
+}
+
+    </script>
+    """
+
+    complete_message = message + javascript_function
+
+    return render_template('index.html', bank_names=bank_names, no_error=status, message=complete_message)
 
 if __name__ == '__main__':
     socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)
