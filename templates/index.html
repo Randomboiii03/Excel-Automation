@@ -182,40 +182,54 @@
             });
 
 
-    const uploadForm = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('fileInput');
+            const uploadForm = document.getElementById('uploadForm');
+const fileInput = document.getElementById('fileInput');
 
-    uploadForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+uploadForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-        const file = fileInput.files[0];
-        if (!file) {
-            alert('Please select a file.');
-            return;
-        }
+    const file = fileInput.files[0];
+    if (!file) {
+        alert('Please select a file.');
+        return;
+    }
 
-        const formData = new FormData();
-        formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-        fetch('/upload', {
+    try {
+        const response = await fetch('/upload', {
             method: 'POST',
             body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text();
-        })
-        .then(data => {
-            // Handle successful upload response
-            console.log(data);
-        })
-        .catch(error => {
-            // Handle errors
-            console.error('There was an error with the upload:', error);
         });
-    });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.text();
+
+        // Handle successful upload response
+        console.log(data);
+        // Trigger Sweet Alert notification
+        Swal.fire({
+            text: 'File processing completed.',
+            icon: 'success',
+            confirmButtonText: 'PROCEED'
+        });
+    } catch (error) {
+        // Handle errors
+        console.error('There was an error with the upload:', error);
+        // Optionally, trigger an error Sweet Alert notification
+        Swal.fire({
+            text: 'There was an error with the upload.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    }
+});
+
+
         })
 
         
