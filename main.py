@@ -20,6 +20,7 @@ MODEL_PATH = 'model.joblib'
 VECTORIZER_PATH = 'vectorizer.joblib'
 
 directory_path = os.path.join(os.path.expanduser("~"), "Desktop")
+
 app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', UPLOAD_FOLDER)
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
@@ -35,12 +36,13 @@ def make_predictions(data):
     predictions_df = pd.DataFrame({'muni-area': predictions, 'probability': max_probs, 'address': data})
     return predictions_df
 
-@app.route('/upload', methods=['POST'])
+# @app.route('/upload', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    # if 'file' not in request.files:
+    #     return jsonify({'error': 'No file part'}), 400
 
-    file = request.files['file']
+    # file = request.files['file']
+    file = os.path.join(directory_path, "Address")
     if file.filename == '' or not file.filename.endswith(('.csv', '.xlsx')):
         return jsonify({'error': 'No selected file or invalid file type'}), 400
 
@@ -51,7 +53,7 @@ def upload():
     result_folder = os.path.join(directory_path,"Address","Area Break")
 
     if not os.path.exists(result_folder):
-        os.makedirs(result_folder)
+        os.makedirs(result_folder)  
 
     try:
         if filename.endswith('.csv'):
@@ -59,7 +61,7 @@ def upload():
         else:
             df = pd.read_excel(filepath)
 
-        predictions_df = make_predictions(df['ADDRESS'].tolist()) #iwant to make this line ignore the case for address
+        predictions_df = make_predictions(df['ADDRESS'].tolist())
         result_path = os.path.join(result_folder,'result.xlsx')
         predictions_df.to_excel(result_path, index=False)
         return send_file(result_path, as_attachment=True)
