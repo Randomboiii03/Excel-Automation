@@ -36,13 +36,12 @@ def make_predictions(data):
     predictions_df = pd.DataFrame({'muni-area': predictions, 'probability': max_probs, 'address': data})
     return predictions_df
 
-# @app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
-    # if 'file' not in request.files:
-    #     return jsonify({'error': 'No file part'}), 400
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
 
-    # file = request.files['file']
-    file = os.path.join(directory_path, "Address")
+    file = request.files['file']
     if file.filename == '' or not file.filename.endswith(('.csv', '.xlsx')):
         return jsonify({'error': 'No selected file or invalid file type'}), 400
 
@@ -53,7 +52,7 @@ def upload():
     result_folder = os.path.join(directory_path,"Address","Area Break")
 
     if not os.path.exists(result_folder):
-        os.makedirs(result_folder)  
+        os.makedirs(result_folder)
 
     try:
         if filename.endswith('.csv'):
