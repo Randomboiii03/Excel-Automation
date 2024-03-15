@@ -1,17 +1,71 @@
 import os
 import pandas as pd
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_uploads import UploadSet, configure_uploads, DATA
+from werkzeug.utils import secure_filename
 import random
 from datetime import datetime
 from flask_socketio import SocketIO
 from time import sleep
 import functions as func
+from joblib import load
 from pathlib import Path
+import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+UPLOAD_FOLDER = 'uploads'
+MODEL_PATH = 'model.joblib'
+VECTORIZER_PATH = 'vectorizer.joblib'
+
 directory_path = os.path.join(os.path.expanduser("~"), "Desktop")
+app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', UPLOAD_FOLDER)
+files = UploadSet('files', DATA)
+configure_uploads(app, files)
+
+model = load(os.getenv('MODEL_PATH', MODEL_PATH))
+vectorizer = load(os.getenv('VECTORIZER_PATH', VECTORIZER_PATH))
+
+def make_predictions(data):
+    X_new = vectorizer.transform(data)
+    predictions = model.predict(X_new)
+    probabilities = model.predict_proba(X_new)
+    max_probs = np.max(probabilities, axis=1)
+    predictions_df = pd.DataFrame({'muni-area': predictions, 'probability': max_probs, 'address': data})
+    return predictions_df
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '' or not file.filename.endswith(('.csv', '.xlsx')):
+        return jsonify({'error': 'No selected file or invalid file type'}), 400
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOADED_FILES_DEST'], filename)
+    file.save(filepath)
+
+    result_folder = os.path.join(directory_path,"Address","Area Break")
+
+    if not os.path.exists(result_folder):
+        os.makedirs(result_folder)
+
+    try:
+        if filename.endswith('.csv'):
+            df = pd.read_csv(filepath)
+        else:
+            df = pd.read_excel(filepath)
+
+        predictions_df = make_predictions(df['ADDRESS'].tolist()) #iwant to make this line ignore the case for address
+        result_path = os.path.join(result_folder,'result.xlsx')
+        predictions_df.to_excel(result_path, index=False)
+        return send_file(result_path, as_attachment=True)
+    finally:
+        os.remove(filepath)  # Clean up the uploaded file
+
 
 @app.route('/delete', methods=['POST'])
 def delete():
@@ -47,7 +101,7 @@ def merge():
         bank_name = request.form['bank_name']
 
         merge_excel_folder = os.path.join(directory_path, "Merge-Excel")
-        area_break_folder = os.path.join(directory_path, "Area Break")
+        area_break_folder = os.path.join(directory_path, "Address")
 
         if not os.path.exists(merge_excel_folder):
             os.makedirs(merge_excel_folder)
