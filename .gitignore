@@ -12,6 +12,7 @@ instance/
 # Logs and databases
 *.log
 *.db
+*.joblib
 
 # User uploaded files
 uploads/
