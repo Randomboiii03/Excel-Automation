@@ -7,6 +7,9 @@ from flask_socketio import SocketIO
 from time import sleep
 import functions as func
 from pathlib import Path
+import joblib
+from sklearn.feature_extraction.text import CountVectorizer
+import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -114,7 +117,7 @@ def merge():
                             output_row.append(row[col_header])
                             existing_headers.add(mapped_header)
 
-            set_progress((i + 1) / work_progress * 100)
+            set_progress((i + 1) / (2 * total_files) * 100)
 
         # Create the merge excel file
         output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
@@ -123,32 +126,61 @@ def merge():
 
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
+        
+         # Make addresses in 'ADDRESS' column uppercase
+        output_work_book['ADDRESS'] = output_work_book['ADDRESS'].str.upper()
+        
         output_work_book.to_excel(output_file_path, index=False)
 
-        set_progress((total_files + 1) / work_progress * 100)
+        set_progress(50)
 
         # Clean and fill bank and placement if missing
         campaign_file_path = 'campaign_list.json' 
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, campaign_file_path)
 
-        set_progress((total_files + 2) / work_progress * 100)
-
-        # Compile addresses into one excel file
+        set_progress(75)
+        
+        model = joblib.load('trained_model.joblib')
+        
+        # Step 1: Extract the 'ADDRESS' column from the output_work_book
         address_column_name = "ADDRESS"
-        output_address_file_name = f"Output-Address-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_address_file_path = os.path.join(area_break_folder, output_address_file_name)
-        func.extract_address(output_file_path, address_column_name, output_address_file_path)
+        uploaded_addresses = output_work_book[address_column_name].fillna('').values
 
-        set_progress((total_files + 3) / work_progress * 100)
+        # Step 2: Load the CountVectorizer used for training
+        vectorizer = CountVectorizer()
+        vectorizer = joblib.load('vectorizer.joblib')
 
+        # Step 3: Transform the uploaded addresses using the loaded CountVectorizer
+        uploaded_vectorized = vectorizer.transform(uploaded_addresses)
+
+        # Step 4: Predict the muni-area and obtain probability estimates for the uploaded addresses
+        predictions = model.predict(uploaded_vectorized)
+        probabilities = model.predict_proba(uploaded_vectorized)
+
+        # Step 5: Create the result DataFrame
+        result_data = pd.DataFrame({
+            'Address': uploaded_addresses,
+            'AREA-MUNI': predictions,
+            'PROBABILITY': [probabilities[i][np.where(model.classes_ == predictions[i])][0] for i in range(len(predictions))]
+        })
+
+        # Step 6: Split the 'AREA-MUNI' into 'AREA' and 'MUNICIPALITY'
+        result_data[['AREA', 'MUNICIPALITY']] = result_data['AREA-MUNI'].str.split('-', expand=True)
+
+        # Step 7: Insert the result DataFrame into the merged data
+        merged_data = pd.read_excel(output_file_path)
+        merged_data['AREA'] = result_data['AREA']
+        merged_data['MUNICIPALITY'] = result_data['MUNICIPALITY']
+        merged_data['PROBABILITY'] = result_data['PROBABILITY']
+        merged_data.to_excel(output_file_path, index=False)
+        
         # Auto fit columns for better viewing
         func.auto_fit_columns(output_file_path)
-        func.auto_fit_columns(output_address_file_path)
 
-        set_progress((total_files + 4) / work_progress * 100)
+        set_progress(100)
 
-        message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>. Address file: <strong><a href='file:///{output_address_file_path}' target='_blank'>{output_address_file_name}</a></strong>"
+        message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
 
     except Exception as e:
@@ -159,7 +191,39 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
+@app.route('/add_data', methods=['POST'])
+def add_data():
+    # Load the trained model and vectorizer
+    model = joblib.load('trained_model.joblib')
+    vectorizer = joblib.load('vectorizer.joblib')
 
+    # Read the uploaded file into a DataFrame
+    file = request.files['file']
+    input_data = pd.read_excel(file)
+
+    # Extract the addresses and area-muni from the input data
+    addresses = input_data['address'].fillna('').values
+    area_muni = input_data['area-muni'].fillna('').values
+
+    # Transform the addresses using the loaded vectorizer
+    vectorized = vectorizer.transform(addresses)
+
+    # Sample a subset of the new data to match the size of the existing data
+    existing_size = model.partial_fit(vectorized[:1], area_muni[:1], classes=model.classes_).n_features_in_
+    new_vectorized_sampled = vectorized[:existing_size]
+    area_muni_sampled = area_muni[:existing_size]
+
+    # Update the existing model with the new data
+    model.partial_fit(new_vectorized_sampled, area_muni_sampled, classes=model.classes_)
+
+    # Save the updated model
+    joblib.dump(model, 'trained_model.joblib')
+
+    return 'New data added to the model.'
+
+
+
+    app.run()
 @app.route('/', methods=['GET'])
 def index():
     requests_folder = os.path.join(directory_path, "Requests")
