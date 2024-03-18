@@ -22,7 +22,7 @@ def train_model_save_joblib():
     source_muni_areas_sampled = source_muni_areas[sample_indices]
 
     # Train the machine learning model on the sampled data
-    model = SGDClassifier(loss='log_loss', max_iter=1000, tol=1e-3, random_state=42, learning_rate='adaptive')  # Using logistic regression with SGD
+    model = SGDClassifier(loss='log_loss', max_iter=1000, tol=1e-3, random_state=42, )  # Using logistic regression with SGD
     model.partial_fit(source_vectorized_sampled, source_muni_areas_sampled, classes=np.unique(source_muni_areas))
 
     # Save the trained model using joblib
@@ -31,5 +31,5 @@ def train_model_save_joblib():
 
     print("Model training and saving completed.")
 
-# if __name__ == "__main__":
-#     train_model_save_joblib()
+if __name__ == "__main__":
+    train_model_save_joblib()

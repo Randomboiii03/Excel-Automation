@@ -42,10 +42,13 @@
             const hiddenClasses = ["hidden"];
             const successClasses = ["bg-green-100", "border-green-400", "text-green-700",];
             const errorClasses = ["bg-red-100", "border-red-400", "text-red-700"];
+
             let folderPath = "";
+
             socket.on("connect", function () {
                 console.log("Connected!");
             });
+            
             socket.on("update progress", function (percent) {
                 console.log("Got percent: " + percent);
                 animateProgress(percent);
@@ -97,14 +100,17 @@
             function hideDeleteModal() {
                 $("#delete-modal").addClass("hidden");
             }
+
             $("#delete-confirm-button").on("click", function () {
                 deleteFiles();
                 hideDeleteModal();
             });
+
             $("#delete-cancel-button").on("click", function () {
                 hideDeleteModal();
                 Swal.fire("Cancelled", "Deletion operation cancelled.", "info");
             });
+
             mergeForm.onsubmit = function (event) {
                 event.preventDefault();
                 const formData = new FormData(mergeForm);
@@ -126,6 +132,7 @@
                     showMessage(error, "Error!", errorClasses);
                 });
             };
+
             mergeButton.addEventListener("click", function () {
                 mergeButton.classList.add(...hiddenClasses);
                 progressContainer.classList.remove(...hiddenClasses);
@@ -133,6 +140,7 @@
                 progressText.textContent = Math.round(0) + "%";
                 messageContainer.classList.add(...hiddenClasses);
             });
+
             window.addEventListener("keydown", function (event) {
                 if (event.keyCode === 116 && !document.getElementById("progress").classList.contains("hidden")) {
                     // Prevent default behavior
@@ -192,7 +200,6 @@
                 }
             });
 
-
             const uploadForm = document.getElementById('uploadForm');
             const fileInput = document.getElementById('fileInput');
 
@@ -240,8 +247,59 @@
 
 
         })
+    </script>
 
+    <script>
+        function submitForm() {
+            let formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
 
+            Swal.fire({
+                title: 'Loading',
+                html: 'Please wait...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
+            fetch('/feed', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    Swal.close(); // Close the loading dialog
+                    if (data.status) {
+                        Swal.fire({
+                            icon: 'success',
+                            text: data.message
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while processing the request.'
+                    });
+                });
+        }
+    </script>
+
+    <script>
+        function showLoader() {
+            document.getElementById('uploadText').style.display = 'none'; // Hide the upload text
+            document.getElementById('loader').style.display = 'block'; // Show the loader
+        }
     </script>
 
     <!-- NANDITO YUNG SCRIPTS DITO LANG ILAGAY ANG MGA SCRIPTS, PAG SINABI KONG SCRIPTS JAVASCRIPTS PO OPO THX -->
@@ -292,9 +350,8 @@
     <h1 class="text-2xl text-center font-bold mb-5 mt-2">DATA FEED</h1>
     <div class="flex justify-center items-center">
         <div class="card  p-5 rounded">
-            <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
-            <form action="/feed" method="post" enctype="multipart/form-data" class="space-y-5">
-
+            <h1 class="text-md font-bold mb-5">Upload XLSX</h1>
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-5">
                 <div class="form-group">
                     <div class="grid w-full max-w-xs items-center gap-1.5">
                         <label
@@ -302,8 +359,11 @@
                             FILE:</label>
                         <input type="file" accept=".xlsx, .xls" class="form-control-file" id="file" name="file"
                             class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
-                        <button type="submit" value="Upload"
-                            class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
+                        <button type="button"
+                            class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded"
+                            onclick="submitForm()">Upload</button>
+                    </div>
+                </div>
             </form>
             <div id="notification" class="mt-3"></div>
         </div>
