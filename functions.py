@@ -94,17 +94,26 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
     book.save(excel_file_path)
 
 # Function to drop rows with CH CODE that has all-letter value
+# def drop_row_with_one_cell(excel_file_path):
+#     excel_data = pd.read_excel(excel_file_path)
+
+#     # Convert CH CODE to string
+#     excel_data['CH CODE'] = excel_data['CH CODE'].astype(str)
+#     # Drop rows with CH CODE that has all-letter value
+#     excel_data = excel_data[~excel_data['CH CODE'].str.isalpha().all(axis=1)]
+    
+#     # Save the modified DataFrame to an Excel file
+#     excel_data.to_excel(excel_file_path, index=False)
+# Function to drop rows with a single cell that has a value
+
 def drop_row_with_one_cell(excel_file_path):
     excel_data = pd.read_excel(excel_file_path)
 
-    # Convert CH CODE to string
-    excel_data['CH CODE'] = excel_data['CH CODE'].astype(str)
-    # Drop rows with CH CODE that has all-letter value
-    excel_data = excel_data[~excel_data['CH CODE'].str.isalpha()]
+    # Drop rows with a single cell that has a value
+    excel_data = excel_data[excel_data.count(axis=1) > 1]
     
     # Save the modified DataFrame to an Excel file
     excel_data.to_excel(excel_file_path, index=False)
-
 # Function to extract and save address data from an output Excel file
 def extract_address(output_file_path, address_column_name, output_address_file_path):
     output_data = pd.read_excel(output_file_path)

@@ -1,17 +1,75 @@
 import os
 import pandas as pd
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_uploads import UploadSet, configure_uploads, DATA
+from werkzeug.utils import secure_filename
 import random
 from datetime import datetime
 from flask_socketio import SocketIO
 from time import sleep
 import functions as func
+from joblib import load
 from pathlib import Path
+import joblib
+from sklearn.feature_extraction.text import CountVectorizer
+
+import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+UPLOAD_FOLDER = 'uploads'
+MODEL_PATH = 'model.joblib'
+VECTORIZER_PATH = 'vectorizer.joblib'
+
 directory_path = os.path.join(os.path.expanduser("~"), "Desktop")
+
+app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', UPLOAD_FOLDER)
+files = UploadSet('files', DATA)
+configure_uploads(app, files)
+
+model = load(os.getenv('MODEL_PATH', MODEL_PATH))
+vectorizer = load(os.getenv('VECTORIZER_PATH', VECTORIZER_PATH))
+
+def make_predictions(data):
+    X_new = vectorizer.transform(data)
+    predictions = model.predict(X_new)
+    probabilities = model.predict_proba(X_new)
+    max_probs = np.max(probabilities, axis=1)
+    predictions_df = pd.DataFrame({'muni-area': predictions, 'probability': max_probs, 'address': data})
+    return predictions_df
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '' or not file.filename.endswith(('.csv', '.xlsx')):
+        return jsonify({'error': 'No selected file or invalid file type'}), 400
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOADED_FILES_DEST'], filename)
+    file.save(filepath)
+
+    result_folder = os.path.join(directory_path,"Address","Area Break")
+
+    if not os.path.exists(result_folder):
+        os.makedirs(result_folder)
+
+    try:
+        if filename.endswith('.csv'):
+            df = pd.read_csv(filepath)
+        else:
+            df = pd.read_excel(filepath)
+
+        predictions_df = make_predictions(df['ADDRESS'].tolist())
+        result_path = os.path.join(result_folder,'result.xlsx')
+        predictions_df.to_excel(result_path, index=False)
+        return send_file(result_path, as_attachment=True)
+    finally:
+        os.remove(filepath)  # Clean up the uploaded file
+
 
 @app.route('/delete', methods=['POST'])
 def delete():
@@ -47,7 +105,7 @@ def merge():
         bank_name = request.form['bank_name']
 
         merge_excel_folder = os.path.join(directory_path, "Merge-Excel")
-        area_break_folder = os.path.join(directory_path, "Area Break")
+        area_break_folder = os.path.join(directory_path, "Address")
 
         if not os.path.exists(merge_excel_folder):
             os.makedirs(merge_excel_folder)
@@ -114,7 +172,7 @@ def merge():
                             output_row.append(row[col_header])
                             existing_headers.add(mapped_header)
 
-            set_progress((i + 1) / work_progress * 100)
+            set_progress((i + 1) / (2 * total_files) * 100)
 
         # Create the merge excel file
         output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
@@ -123,32 +181,61 @@ def merge():
 
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
+        
+         # Make addresses in 'ADDRESS' column uppercase
+        output_work_book['ADDRESS'] = output_work_book['ADDRESS'].str.upper()
+        
         output_work_book.to_excel(output_file_path, index=False)
 
-        set_progress((total_files + 1) / work_progress * 100)
+        set_progress(50)
 
         # Clean and fill bank and placement if missing
         campaign_file_path = 'campaign_list.json' 
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, campaign_file_path)
 
-        set_progress((total_files + 2) / work_progress * 100)
-
-        # Compile addresses into one excel file
+        set_progress(75)
+        
+        model = joblib.load('trained_model.joblib')
+        
+        # Step 1: Extract the 'ADDRESS' column from the output_work_book
         address_column_name = "ADDRESS"
-        output_address_file_name = f"Output-Address-{bank_name}-{current_date}-{random_number}.xlsx"
-        output_address_file_path = os.path.join(area_break_folder, output_address_file_name)
-        func.extract_address(output_file_path, address_column_name, output_address_file_path)
+        uploaded_addresses = output_work_book[address_column_name].fillna('').values
 
-        set_progress((total_files + 3) / work_progress * 100)
+        # Step 2: Load the CountVectorizer used for training
+        vectorizer = CountVectorizer()
+        vectorizer = joblib.load('vectorizer.joblib')
 
+        # Step 3: Transform the uploaded addresses using the loaded CountVectorizer
+        uploaded_vectorized = vectorizer.transform(uploaded_addresses)
+
+        # Step 4: Predict the muni-area and obtain probability estimates for the uploaded addresses
+        predictions = model.predict(uploaded_vectorized)
+        probabilities = model.predict_proba(uploaded_vectorized)
+
+        # Step 5: Create the result DataFrame
+        result_data = pd.DataFrame({
+            'Address': uploaded_addresses,
+            'AREA-MUNI': predictions,
+            'PROBABILITY': [probabilities[i][np.where(model.classes_ == predictions[i])][0] for i in range(len(predictions))]
+        })
+
+        # Step 6: Split the 'AREA-MUNI' into 'AREA' and 'MUNICIPALITY'
+        result_data[['AREA', 'MUNICIPALITY']] = result_data['AREA-MUNI'].str.split('-', expand=True)
+
+        # Step 7: Insert the result DataFrame into the merged data
+        merged_data = pd.read_excel(output_file_path)
+        merged_data['AREA'] = result_data['AREA']
+        merged_data['MUNICIPALITY'] = result_data['MUNICIPALITY']
+        merged_data['PROBABILITY'] = result_data['PROBABILITY']
+        merged_data.to_excel(output_file_path, index=False)
+        
         # Auto fit columns for better viewing
         func.auto_fit_columns(output_file_path)
-        func.auto_fit_columns(output_address_file_path)
 
-        set_progress((total_files + 4) / work_progress * 100)
+        set_progress(100)
 
-        message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>. Address file: <strong><a href='file:///{output_address_file_path}' target='_blank'>{output_address_file_name}</a></strong>"
+        message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
 
     except Exception as e:
@@ -159,7 +246,39 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
+@app.route('/add_data', methods=['POST'])
+def add_data():
+    # Load the trained model and vectorizer
+    model = joblib.load('trained_model.joblib')
+    vectorizer = joblib.load('vectorizer.joblib')
 
+    # Read the uploaded file into a DataFrame
+    file = request.files['file']
+    input_data = pd.read_excel(file)
+
+    # Extract the addresses and area-muni from the input data
+    addresses = input_data['address'].fillna('').values
+    area_muni = input_data['area-muni'].fillna('').values
+
+    # Transform the addresses using the loaded vectorizer
+    vectorized = vectorizer.transform(addresses)
+
+    # Sample a subset of the new data to match the size of the existing data
+    existing_size = model.partial_fit(vectorized[:1], area_muni[:1], classes=model.classes_).n_features_in_
+    new_vectorized_sampled = vectorized[:existing_size]
+    area_muni_sampled = area_muni[:existing_size]
+
+    # Update the existing model with the new data
+    model.partial_fit(new_vectorized_sampled, area_muni_sampled, classes=model.classes_)
+
+    # Save the updated model
+    joblib.dump(model, 'trained_model.joblib')
+
+    return 'New data added to the model.'
+
+
+
+    app.run()
 @app.route('/', methods=['GET'])
 def index():
     requests_folder = os.path.join(directory_path, "Requests")
@@ -173,11 +292,39 @@ def index():
     # Get bank names using folder
     bank_names = [folder.upper() for folder in os.listdir(requests_folder) if os.path.isdir(os.path.join(requests_folder, folder))]
 
-    if not bank_names:
-        message = f"Please create folder for campaigns in <strong>{requests_folder}</strong>"
-        status = True
+    escaped_requests_folder = requests_folder.replace('\\', '\\\\')
 
-    return render_template('index.html', bank_names=bank_names, no_error=status, message=message)
+    if not bank_names:
+        message = f"Please create folder for campaigns in <strong><span id='folderName'>{escaped_requests_folder}</span><i class='fa fa-copy copy-icon' style='cursor:pointer;margin-left:5px;' onclick='copyToClipboard(\"{escaped_requests_folder}\")'></i></strong></span>"
+        status = True
+        
+
+    # JavaScript function to copy the folder name to clipboard
+    javascript_function = """
+    <script>
+  function copyToClipboard(text) {
+    var tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    Swal.fire({
+        title: "Paste In file manager:",
+        text: text,
+        showCancelButton: false,
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK"
+    });
+}
+
+    </script>
+    """
+
+    complete_message = message + javascript_function
+
+    return render_template('index.html', bank_names=bank_names, no_error=status, message=complete_message)
 
 if __name__ == '__main__':
     socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)
