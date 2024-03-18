@@ -31,5 +31,5 @@ def train_model_save_joblib():
 
     print("Model training and saving completed.")
 
-if __name__ == "__main__":
-    train_model_save_joblib()
+# if __name__ == "__main__":
+#     train_model_save_joblib()
