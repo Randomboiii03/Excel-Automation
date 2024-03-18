@@ -5,22 +5,31 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>MergeIT</title>
+
     <link rel="icon" type="image/png" href="./static/spm-removebg-preview.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-i/8Gnbf79aZTcR1aR76jgUkF5Tv8cYYWb0Iw/Eh7pPT73Rb3e27WL4ZgsdRuZo+c" crossorigin="anonymous" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        integrity="sha384-i/8Gnbf79aZTcR1aR76jgUkF5Tv8cYYWb0Iw/Eh7pPT73Rb3e27WL4ZgsdRuZo+c" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+        integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script type="text/javascript">
-        window.onload = function() {
+        window.onload = function () {
             const socket = io();
             socket.connect("http://localhost:8000");
+
             const bankName = document.getElementById("bank_name");
             const progressBar = document.getElementById("progressBar");
             const progressText = document.getElementById("progressText");
@@ -31,13 +40,13 @@
             const messageText = document.getElementById("messageText");
             const mergeForm = document.getElementById("mergeForm");
             const hiddenClasses = ["hidden"];
-            const successClasses = ["bg-green-100", "border-green-400", "text-green-700", ];
+            const successClasses = ["bg-green-100", "border-green-400", "text-green-700",];
             const errorClasses = ["bg-red-100", "border-red-400", "text-red-700"];
             let folderPath = "";
-            socket.on("connect", function() {
+            socket.on("connect", function () {
                 console.log("Connected!");
             });
-            socket.on("update progress", function(percent) {
+            socket.on("update progress", function (percent) {
                 console.log("Got percent: " + percent);
                 animateProgress(percent);
             });
@@ -45,7 +54,7 @@
             function animateProgress(targetPercent) {
                 let currentPercent = parseFloat(progressBar.style.width) || 0;
                 const step = (targetPercent - currentPercent) / 20;
-                const interval = setInterval(function() {
+                const interval = setInterval(function () {
                     currentPercent += step;
                     progressBar.style.width = currentPercent + "%";
                     progressText.textContent = Math.round(currentPercent) + "%";
@@ -88,15 +97,15 @@
             function hideDeleteModal() {
                 $("#delete-modal").addClass("hidden");
             }
-            $("#delete-confirm-button").on("click", function() {
+            $("#delete-confirm-button").on("click", function () {
                 deleteFiles();
                 hideDeleteModal();
             });
-            $("#delete-cancel-button").on("click", function() {
+            $("#delete-cancel-button").on("click", function () {
                 hideDeleteModal();
                 Swal.fire("Cancelled", "Deletion operation cancelled.", "info");
             });
-            mergeForm.onsubmit = function(event) {
+            mergeForm.onsubmit = function (event) {
                 event.preventDefault();
                 const formData = new FormData(mergeForm);
                 bankName.disabled = true;
@@ -105,7 +114,7 @@
                     body: formData,
                 }).then((response) => response.json()).then((data) => {
                     const classes = data.status ? successClasses : errorClasses;
-                    showMessage(data.message, data.status ? "Success!" : "Error!", [...classes, ]);
+                    showMessage(data.message, data.status ? "Success!" : "Error!", [...classes,]);
                     if (data.status) {
                         Swal.close();
                         folderPath = data.file_path;
@@ -117,14 +126,14 @@
                     showMessage(error, "Error!", errorClasses);
                 });
             };
-            mergeButton.addEventListener("click", function() {
+            mergeButton.addEventListener("click", function () {
                 mergeButton.classList.add(...hiddenClasses);
                 progressContainer.classList.remove(...hiddenClasses);
                 progressBar.style.width = 0 + "%";
                 progressText.textContent = Math.round(0) + "%";
                 messageContainer.classList.add(...hiddenClasses);
             });
-            window.addEventListener("keydown", function(event) {
+            window.addEventListener("keydown", function (event) {
                 if (event.keyCode === 116 && !document.getElementById("progress").classList.contains("hidden")) {
                     // Prevent default behavior
                     event.preventDefault();
@@ -156,22 +165,24 @@
             });
         };
     </script>
+
     <script>
         function toggleForm(formToShow) {
             var forms = ["geocodeForm", "dataFeedForm", "mergeit"];
-            forms.forEach(function(formId) {
+            forms.forEach(function (formId) {
                 var form = document.getElementById(formId);
                 form.style.display = (formToShow === formId) ? "block" : "none";
             });
         }
     </script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const navbarToggle = document.getElementById('navbar-toggle');
             const navbar = document.querySelector('.navbar');
             // Initially position the navbar off-screen
             navbar.style.transform = 'translateY(-100%)';
-            navbarToggle.addEventListener('change', function() {
+            navbarToggle.addEventListener('change', function () {
                 if (navbarToggle.checked) {
                     // Slide the navbar into view when the burger icon is clicked
                     navbar.style.transform = 'translateY(0)';
@@ -183,58 +194,56 @@
 
 
             const uploadForm = document.getElementById('uploadForm');
-const fileInput = document.getElementById('fileInput');
+            const fileInput = document.getElementById('fileInput');
 
-uploadForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+            uploadForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
 
-    const file = fileInput.files[0];
-    if (!file) {
-        alert('Please select a file.');
-        return;
-    }
+                const file = fileInput.files[0];
 
-    const formData = new FormData();
-    formData.append('file', file);
+                const formData = new FormData();
+                formData.append('file', file);
 
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData
-        });
+                // Loading 
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-        const data = await response.text();
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
 
-        // Handle successful upload response
-        console.log(data);
-        // Trigger Sweet Alert notification
-        Swal.fire({
-            text: 'File processing completed.',
-            icon: 'success',
-            confirmButtonText: 'PROCEED'
-        });
-    } catch (error) {
-        // Handle errors
-        console.error('There was an error with the upload:', error);
-        // Optionally, trigger an error Sweet Alert notification
-        Swal.fire({
-            text: 'There was an error with the upload.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-    }
-});
+                    const data = await response.text();
+
+                    // Handle successful upload response
+                    console.log(data);
+                    // Trigger Sweet Alert notification
+                    Swal.fire({
+                        text: 'File processing completed.',
+                        icon: 'success',
+                        confirmButtonText: 'PROCEED'
+                    });
+                } catch (error) {
+                    // Handle errors
+                    console.error('There was an error with the upload:', error);
+                    // Optionally, trigger an error Sweet Alert notification
+                    Swal.fire({
+                        text: 'There was an error with the upload.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
 
 
         })
 
-        
+
     </script>
-   
+
     <!-- NANDITO YUNG SCRIPTS DITO LANG ILAGAY ANG MGA SCRIPTS, PAG SINABI KONG SCRIPTS JAVASCRIPTS PO OPO THX -->
 </head>
 <!-- NANDITO YUNG HTML, OPO PAG SINABI PONG HTML, HYPERTEXT MARKUP LANGUAGE LANG PO ANG PWEDE-->
@@ -242,7 +251,9 @@ uploadForm.addEventListener('submit', async (event) => {
     <label class="hamburger" for="navbar-toggle">
         <input type="checkbox" id="navbar-toggle">
         <svg viewBox="0 0 32 32">
-            <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+            <path class="line line-top-bottom"
+                d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22">
+            </path>
             <path class="line" d="M7 16 27 16"></path>
         </svg>
     </label>
@@ -255,40 +266,48 @@ uploadForm.addEventListener('submit', async (event) => {
     </ul>
 </nav>
 <div id="geocodeForm" class="popup-form flex flex-col items-center p-5 rounded">
-  <h1 class="text-2xl text-center font-bold mb-5 mt-2">GEOCODE</h1>
-  <div class="flex justify-center items-center">
-      <div class="card  p-5 rounded">
-          <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
-          <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" class="space-y-5">
-              <div class="form-group">
-                  <div class="grid w-full max-w-xs items-center gap-1.5">
-                      <label class="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="fileInput">SELECT FILE:</label>
-                      <input type="file" id="fileInput" accepts="" class="form-control-file" name="file" class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400">
-                      <button type="submit" class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
-          </form>
-          <div id="notification" class="mt-3"></div>
-      </div>
-  </div>
+    <h1 class="text-2xl text-center font-bold mb-5 mt-2">GEOCODE</h1>
+    <div class="flex justify-center items-center">
+        <div class="card  p-5 rounded">
+            <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
+            <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data" class="space-y-5">
+                <div class="form-group">
+                    <div class="grid w-full max-w-xs items-center gap-1.5">
+                        <label
+                            class="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            for="fileInput">SELECT FILE:</label>
+                        <input type="file" id="fileInput" accepts=".xlsx, .xls" class="form-control-file" name="file"
+                            class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
+                        <button type="submit"
+                            class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
+            </form>
+            <div id="notification" class="mt-3"></div>
+        </div>
+    </div>
 </div>
 </div>
 </form>
 </div>
 <div id="dataFeedForm" class="popup-form flex flex-col items-center p-5 rounded">
-  <h1 class="text-2xl text-center font-bold mb-5 mt-2">DATA FEED</h1>
-  <div class="flex justify-center items-center">
-      <div class="card  p-5 rounded">
-          <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
-          <form action="/add_data" method="post" enctype="multipart/form-data" class="space-y-5">
+    <h1 class="text-2xl text-center font-bold mb-5 mt-2">DATA FEED</h1>
+    <div class="flex justify-center items-center">
+        <div class="card  p-5 rounded">
+            <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
+            <form action="/feed" method="post" enctype="multipart/form-data" class="space-y-5">
 
-              <div class="form-group">
-                  <div class="grid w-full max-w-xs items-center gap-1.5">
-                      <label class="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">SELECT FILE:</label>
-                      <input type="file" accept=".xlsx, .xls class="form-control-file" id="file" name="file" class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400">
-                      <button type="submit" value="Upload" class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
-          </form>
-          <div id="notification" class="mt-3"></div>
-      </div>
-  </div>
+                <div class="form-group">
+                    <div class="grid w-full max-w-xs items-center gap-1.5">
+                        <label
+                            class="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">SELECT
+                            FILE:</label>
+                        <input type="file" accept=".xlsx, .xls" class="form-control-file" id="file" name="file"
+                            class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
+                        <button type="submit" value="Upload"
+                            class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
+            </form>
+            <div id="notification" class="mt-3"></div>
+        </div>
+    </div>
 </div>
 
 </div>
@@ -325,41 +344,57 @@ uploadForm.addEventListener('submit', async (event) => {
         <h1 class="text-2xl font-bold mb-4 text-center font-poppins">MergeIT</h1>
         <form id="mergeForm" method="POST" class="space-y-4">
             <label for="bank_name">Select Bank:</label>
-            <select name="bank_name" id="bank_name" class="block w-full border-gray-500 border-2 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-poppins py-2 px-2"> {% for bank_name in bank_names %} <option value="{{ bank_name }}">{{ bank_name }}</option> {% endfor %} </select>
-            <button type="submit" id="mergeButton" class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors duration-300 font-poppins"> Merge Files </button>
+            <select name="bank_name" id="bank_name"
+                class="block w-full border-gray-500 border-2 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-poppins py-2 px-2">
+                {% for bank_name in bank_names %} <option value="{{ bank_name }}">{{ bank_name }}</option> {% endfor %}
+            </select>
+            <button type="submit" id="mergeButton"
+                class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors duration-300 font-poppins">
+                Merge Files </button>
             <div id="progress" class="hidden mt-4">
                 <div class="flex justify-center items-center">
                     <div id="progressBar" class="h-2 animate-pulse bg-indigo-500 rounded"></div>
                     <span id="progressText" class="ml-2 animate-pulse text-indigo-500">0%</span>
                 </div>
-            </div> {% if no_error %} <div id="message" class="   text-black px-4 py-3 rounded relative" role="alert" style="background-color: #f7dfc5; border: 1px solid #f3a553; color:#504f4f">
+            </div> {% if no_error %} <div id="message" class="   text-black px-4 py-3 rounded relative" role="alert"
+                style="background-color: #f7dfc5; border: 1px solid #f3a553; color:#504f4f">
                 <strong class="font-bold text-xs">Warning!</strong>
                 <span class="block sm:inline text-xs" style="white-space: pre-wrap">{{ message|safe }}</span>
-            </div> {% endif %} <div id="message" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative hidden" role="alert">
+            </div> {% endif %} <div id="message"
+                class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative hidden"
+                role="alert">
                 <strong id="messageStatus" class="font-bold text-xs"></strong>
                 <span id="messageText" class="block sm:inline text-xs" style="white-space: pre-wrap"></span>
             </div>
         </form>
     </div>
     <!-- Delete Modal -->
-    <div id="delete-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="delete-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"> Dumping request files in this campaign. </h3>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"> Dumping request
+                                files in this campaign. </h3>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500"> This process is associated with this system and this action cannot be undone. </p>
+                                <p class="text-sm text-gray-500"> This process is associated with this system and this
+                                    action cannot be undone. </p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button id="delete-confirm-button" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 sm:ml-3 sm:w-auto sm:text-sm"> Delete </button>
-                    <button id="delete-cancel-button" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"> Cancel </button>
+                    <button id="delete-confirm-button" type="button"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 sm:ml-3 sm:w-auto sm:text-sm">
+                        Delete </button>
+                    <button id="delete-cancel-button" type="button"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel </button>
                 </div>
             </div>
         </div>
@@ -487,4 +522,5 @@ uploadForm.addEventListener('submit', async (event) => {
         }
     </style>
 </body>
+
 </html>

@@ -8,67 +8,35 @@ from datetime import datetime
 from flask_socketio import SocketIO
 from time import sleep
 import functions as func
-from joblib import load
-from pathlib import Path
 import joblib
 from sklearn.feature_extraction.text import CountVectorizer
+from predict import load_model_predict
 
 import numpy as np
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-UPLOAD_FOLDER = 'uploads'
-MODEL_PATH = 'model.joblib'
-VECTORIZER_PATH = 'vectorizer.joblib'
-
 directory_path = os.path.join(os.path.expanduser("~"), "Desktop")
 
-app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', UPLOAD_FOLDER)
+app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', 'uploads')
+app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
-model = load(os.getenv('MODEL_PATH', MODEL_PATH))
-vectorizer = load(os.getenv('VECTORIZER_PATH', VECTORIZER_PATH))
-
-def make_predictions(data):
-    X_new = vectorizer.transform(data)
-    predictions = model.predict(X_new)
-    probabilities = model.predict_proba(X_new)
-    max_probs = np.max(probabilities, axis=1)
-    predictions_df = pd.DataFrame({'muni-area': predictions, 'probability': max_probs, 'address': data})
-    return predictions_df
-
-@app.route('/upload', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
     file = request.files['file']
-    if file.filename == '' or not file.filename.endswith(('.csv', '.xlsx')):
-        return jsonify({'error': 'No selected file or invalid file type'}), 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOADED_FILES_DEST'], filename)
-    file.save(filepath)
-
-    result_folder = os.path.join(directory_path,"Address","Area Break")
-
-    if not os.path.exists(result_folder):
-        os.makedirs(result_folder)
+    file_name = secure_filename(file.filename)
+    file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
+    file.save(file_path)
 
     try:
-        if filename.endswith('.csv'):
-            df = pd.read_csv(filepath)
-        else:
-            df = pd.read_excel(filepath)
-
-        predictions_df = make_predictions(df['ADDRESS'].tolist())
-        result_path = os.path.join(result_folder,'result.xlsx')
-        predictions_df.to_excel(result_path, index=False)
+        result_path = load_model_predict(file_path)
+        
         return send_file(result_path, as_attachment=True)
     finally:
-        os.remove(filepath)  # Clean up the uploaded file
+        os.remove(file_path)  # Clean up the uploaded file
 
 
 @app.route('/delete', methods=['POST'])
@@ -246,36 +214,33 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
-@app.route('/add_data', methods=['POST'])
-def add_data():
-    # Load the trained model and vectorizer
-    model = joblib.load('trained_model.joblib')
-    vectorizer = joblib.load('vectorizer.joblib')
 
-    # Read the uploaded file into a DataFrame
+@app.route('/feed', methods=['POST'])
+def feed():
+    
+    status = False
+    
     file = request.files['file']
-    input_data = pd.read_excel(file)
+    file_name = secure_filename(file.filename)
+    file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
+    file.save(file_path)
 
-    # Extract the addresses and area-muni from the input data
-    addresses = input_data['address'].fillna('').values
-    area_muni = input_data['area-muni'].fillna('').values
-
-    # Transform the addresses using the loaded vectorizer
-    vectorized = vectorizer.transform(addresses)
-
-    # Sample a subset of the new data to match the size of the existing data
-    existing_size = model.partial_fit(vectorized[:1], area_muni[:1], classes=model.classes_).n_features_in_
-    new_vectorized_sampled = vectorized[:existing_size]
-    area_muni_sampled = area_muni[:existing_size]
-
-    # Update the existing model with the new data
-    model.partial_fit(new_vectorized_sampled, area_muni_sampled, classes=model.classes_)
-
-    # Save the updated model
-    joblib.dump(model, 'trained_model.joblib')
-
-    return 'New data added to the model.'
-
+    try:
+        df1 = pd.read_excel(file_path)
+        model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
+        df2 = pd.read_excel(model_path)
+        
+        if list(df1.columns) == list(df2.columns):
+            combine_df = pd.concat([df2, df1], ignore_index=True)
+        
+            combine_df.to_excel(model_path, index=False)
+            status = True
+            
+            return jsonify({"message": "Nice", "status": status})
+        else:
+            return jsonify({"message": "Wrong column format", "status": status})
+    finally:
+        os.remove(file_path)  # Clean up the uploaded file
 
 
     app.run()
