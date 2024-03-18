@@ -11,6 +11,7 @@ import functions as func
 import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from predict import load_model_predict
+from train import train_model_save_joblib
 
 import numpy as np
 
@@ -71,16 +72,16 @@ def merge():
             return jsonify(data_to_return)
 
         bank_name = request.form['bank_name']
-
+        
         merge_excel_folder = os.path.join(directory_path, "Merge-Excel")
-        area_break_folder = os.path.join(directory_path, "Address")
+        # area_break_folder = os.path.join(directory_path, "Address")
 
         if not os.path.exists(merge_excel_folder):
             os.makedirs(merge_excel_folder)
 
-        if not os.path.exists(area_break_folder):
-            os.makedirs(area_break_folder)
-
+        # if not os.path.exists(area_break_folder):
+        #     os.makedirs(area_break_folder)
+        
         folder_path = os.path.join(directory_path, "Requests", bank_name)
         files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f.endswith('.xlsx')]
 
@@ -92,7 +93,9 @@ def merge():
             data_to_return = {'message': message, 'status': status}
             return jsonify(data_to_return)
 
-        template_header = func.get_template_header("Template.xlsx")
+        template_path = os.path.join(app.config['SOURCE_FILES_DEST'], "template.xlsx")
+
+        template_header = func.get_template_header(template_path)
         datas = [template_header]
 
         mapping = {
@@ -104,7 +107,7 @@ def merge():
         existing_headers = set()
 
         total_files = len(files)
-        work_progress = total_files + 4
+        work_progress = total_files + 5
 
         def set_progress(progress):
             socketio.emit("update progress", progress)
@@ -140,7 +143,7 @@ def merge():
                             output_row.append(row[col_header])
                             existing_headers.add(mapped_header)
 
-            set_progress((i + 1) / (2 * total_files) * 100)
+            set_progress((i + 1) / work_progress * 100)
 
         # Create the merge excel file
         output_work_book = pd.DataFrame(datas[1:], columns=datas[0])
@@ -149,22 +152,23 @@ def merge():
 
         output_file_name = f"Output-{bank_name}-{current_date}-{random_number}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
+
+        set_progress((total_files + 1) / work_progress * 100)
         
          # Make addresses in 'ADDRESS' column uppercase
         output_work_book['ADDRESS'] = output_work_book['ADDRESS'].str.upper()
-        
         output_work_book.to_excel(output_file_path, index=False)
 
-        set_progress(50)
-
         # Clean and fill bank and placement if missing
-        campaign_file_path = 'campaign_list.json' 
+        campaign_file_path = 'source\\campaign_list.json' 
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, campaign_file_path)
 
-        set_progress(75)
+        set_progress((total_files + 2) / work_progress * 100)
         
-        model = joblib.load('trained_model.joblib')
+        model = joblib.load('source\\trained_model.joblib')
+
+        set_progress((total_files + 3) / work_progress * 100)
         
         # Step 1: Extract the 'ADDRESS' column from the output_work_book
         address_column_name = "ADDRESS"
@@ -172,7 +176,7 @@ def merge():
 
         # Step 2: Load the CountVectorizer used for training
         vectorizer = CountVectorizer()
-        vectorizer = joblib.load('vectorizer.joblib')
+        vectorizer = joblib.load('source\\vectorizer.joblib')
 
         # Step 3: Transform the uploaded addresses using the loaded CountVectorizer
         uploaded_vectorized = vectorizer.transform(uploaded_addresses)
@@ -180,6 +184,8 @@ def merge():
         # Step 4: Predict the muni-area and obtain probability estimates for the uploaded addresses
         predictions = model.predict(uploaded_vectorized)
         probabilities = model.predict_proba(uploaded_vectorized)
+
+        set_progress((total_files + 4) / work_progress * 100)
 
         # Step 5: Create the result DataFrame
         result_data = pd.DataFrame({
@@ -201,7 +207,7 @@ def merge():
         # Auto fit columns for better viewing
         func.auto_fit_columns(output_file_path)
 
-        set_progress(100)
+        set_progress((total_files + 5) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
@@ -225,25 +231,31 @@ def feed():
     file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
     file.save(file_path)
 
-    try:
-        df1 = pd.read_excel(file_path)
-        model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
-        df2 = pd.read_excel(model_path)
-        
+    df1 = pd.read_excel(file_path)
+
+    model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
+    df2 = pd.read_excel(model_path)
+
+    try:        
         if list(df1.columns) == list(df2.columns):
             combine_df = pd.concat([df2, df1], ignore_index=True)
         
             combine_df.to_excel(model_path, index=False)
+
+            train_model_save_joblib()
             status = True
             
-            return jsonify({"message": "Nice", "status": status})
+            return jsonify({"message": "New data has been fed", "status": status})
         else:
             return jsonify({"message": "Wrong column format", "status": status})
+    except:
+        df2.to_excel(model_path, index=False)
     finally:
         os.remove(file_path)  # Clean up the uploaded file
 
 
     app.run()
+
 @app.route('/', methods=['GET'])
 def index():
     requests_folder = os.path.join(directory_path, "Requests")
@@ -283,7 +295,6 @@ def index():
         confirmButtonText: "OK"
     });
 }
-
     </script>
     """
 
