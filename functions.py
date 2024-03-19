@@ -134,6 +134,35 @@ def auto_fit_columns(excel_file_path):
     # Save the workbook
     wb.save(excel_file_path)
 
+def highlight_n_check_prediction(excel_file_path):
+
+    df = pd.read_excel(excel_file_path)
+
+    # Load the workbook
+    book = load_workbook(excel_file_path)
+
+    # Access the active sheet
+    sheet = book.active
+
+    for row_index, row in df.iterrows():
+        column_index1 = df.columns.get_loc('AREA') + 1
+        cell1= sheet.cell(row=row_index + 2, column=column_index1)
+
+        column_index2 = df.columns.get_loc('MUNICIPALITY') + 1
+        cell2= sheet.cell(row=row_index + 2, column=column_index2)
+
+        if row["MUNICIPALITY"] not in row["ADDRESS"] and row["AREA"] not in row["ADDRESS"]:
+            cell1.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+            cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+        
+        elif row["AREA"] not in row["ADDRESS"]:
+            cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+            
+        elif row["MUNICIPALITY"] not in row["ADDRESS"]:
+            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+
+    book.save(excel_file_path)
+
 # Function to delete all downloaded request files
 def delete_requests_file(folder_path):
     files_to_delete = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
