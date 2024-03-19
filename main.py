@@ -107,9 +107,10 @@ def merge():
         existing_headers = set()
 
         total_files = len(files)
-        work_progress = total_files + 5
+        work_progress = total_files + 6
 
         def set_progress(progress):
+            sleep(0.75)
             socketio.emit("update progress", progress)
 
         set_progress(0)
@@ -155,7 +156,7 @@ def merge():
 
         set_progress((total_files + 1) / work_progress * 100)
         
-         # Make addresses in 'ADDRESS' column uppercase
+        # Make addresses in 'ADDRESS' column uppercase
         output_work_book['ADDRESS'] = output_work_book['ADDRESS'].str.upper()
         output_work_book.to_excel(output_file_path, index=False)
 
@@ -166,54 +167,38 @@ def merge():
 
         set_progress((total_files + 2) / work_progress * 100)
         
-        model = joblib.load('source\\trained_model.joblib')
+        model = joblib.load('source\\model.joblib')
+        output_work_book = pd.read_excel(output_file_path)
 
-        set_progress((total_files + 3) / work_progress * 100)
-        
-        # Step 1: Extract the 'ADDRESS' column from the output_work_book
-        address_column_name = "ADDRESS"
-        uploaded_addresses = output_work_book[address_column_name].fillna('').values
+        # Extract addresses from the 'ADDRESS' column
+        addresses = output_work_book['ADDRESS'].tolist()
 
-        # Step 2: Load the CountVectorizer used for training
-        vectorizer = CountVectorizer()
-        vectorizer = joblib.load('source\\vectorizer.joblib')
+        # Make predictions using the model
+        predictions = model.predict(addresses)
 
-        # Step 3: Transform the uploaded addresses using the loaded CountVectorizer
-        uploaded_vectorized = vectorizer.transform(uploaded_addresses)
+        # Split predictions into AREA and MUNICIPALITY
+        area_munis = [prediction.split('-') for prediction in predictions]
 
-        # Step 4: Predict the muni-area and obtain probability estimates for the uploaded addresses
-        predictions = model.predict(uploaded_vectorized)
-        probabilities = model.predict_proba(uploaded_vectorized)
+        # Update the DataFrame with predictions
+        output_work_book['AREA'] = [area_muni[0] for area_muni in area_munis]
+        output_work_book['MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
 
-        set_progress((total_files + 4) / work_progress * 100)
-
-        # Step 5: Create the result DataFrame
-        result_data = pd.DataFrame({
-            'Address': uploaded_addresses,
-            'AREA-MUNI': predictions,
-            'PROBABILITY': [probabilities[i][np.where(model.classes_ == predictions[i])][0] for i in range(len(predictions))]
-        })
-
-        # Step 6: Split the 'AREA-MUNI' into 'AREA' and 'MUNICIPALITY'
-        result_data[['AREA', 'MUNICIPALITY']] = result_data['AREA-MUNI'].str.split('-', expand=True)
-
-        # Step 7: Insert the result DataFrame into the merged data
-        merged_data = pd.read_excel(output_file_path)
-        merged_data['AREA'] = result_data['AREA']
-        merged_data['MUNICIPALITY'] = result_data['MUNICIPALITY']
-        merged_data['PROBABILITY'] = result_data['PROBABILITY']
-        merged_data.to_excel(output_file_path, index=False)
-        
-        # Auto fit columns for better viewing
-        func.auto_fit_columns(output_file_path)
+        # Save the updated DataFrame to the same Excel file
+        output_work_book.to_excel(output_file_path, index=False)
 
         set_progress((total_files + 5) / work_progress * 100)
+
+        func.highlight_n_check_prediction(output_file_path)
+        func.auto_fit_columns(output_file_path)
+
+        set_progress((total_files + 6) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
 
     except Exception as e:
         message = f"{e}"
+        os.remove(output_file_path)
 
     data_to_return = {'message': message, 'file_path': folder_path, 'status': status}
 
