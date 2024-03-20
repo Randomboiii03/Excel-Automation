@@ -1,3 +1,4 @@
+      
 from fuzzywuzzy import fuzz
 import json
 import re
@@ -12,8 +13,9 @@ def get_template_header(file_path):
 
 # Function to get the total number of rows in an Excel file
 def get_total_rows(file_path):
-    xls = pd.ExcelFile(file_path)
-    total_rows = 0
+    df = pd.read_excel(file_path, sheet_name=0)
+    total_rows = df.shape[0]
+    return total_rows
 
     for sheet_name in xls.sheet_names:
         df = pd.read_excel(file_path, sheet_name)
@@ -23,7 +25,7 @@ def get_total_rows(file_path):
 
 # Function to compare two strings with a given threshold using fuzzy matching
 def compare_string(str1, str2, threshold=90):
-    similarity_ratio = fuzz.token_set_ratio(str(str1).lower(), str(str2).lower())
+    similarity_ratio = fuzz.token_set_ratio(str(str1).replace('_', ' ').lower(), str(str2).replace('_', ' ').lower())
     return similarity_ratio >= threshold
 
 # Function to find a header in a list of row values
@@ -37,21 +39,20 @@ def find_header(row_values, template_header):
 
 # Function to get the index of the header in an Excel file
 def get_index_of_header(excel_file_path, template_header) -> int:
-    work_book = pd.read_excel(excel_file_path, sheet_name=None, header=None)
-    for _, sheet_data in work_book.items():
-        if sheet_data.empty:
-            return 0
-        for index, row in sheet_data.iterrows():
-            if find_header(row.values, template_header):
-                return index
+    sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=None)
+    if sheet_data.empty:
+        return 0
+    for index, row in sheet_data.iterrows():
+        if find_header(row.values, template_header):
+            return index
     return 0
 
 # Function to map a header based on a given mapping dictionary
 def map_header(header, mapping):
     for key, value in mapping.items():
         if compare_string(header.lower(), key.lower()):
-            return value
-    return header
+            return value.upper().replace('_', ' ')
+    return header.upper().replace('_', ' ')
 
 # Function to highlight and fill missing values in specific columns
 def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
@@ -181,3 +182,5 @@ def delete_requests_file(folder_path):
     for file_name in files_to_delete:
         file_path = os.path.join(folder_path, file_name)
         os.remove(file_path)
+
+    
