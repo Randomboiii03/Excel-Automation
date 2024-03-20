@@ -108,8 +108,10 @@ def merge():
 
         total_files = len(files)
         work_progress = total_files + 6
+        work_progress = total_files + 6
 
         def set_progress(progress):
+            sleep(0.75)
             sleep(0.75)
             socketio.emit("update progress", progress)
         
@@ -160,6 +162,7 @@ def merge():
         set_progress((total_files + 1) / work_progress * 100)
         
         # Make addresses in 'ADDRESS' column uppercase
+        # Make addresses in 'ADDRESS' column uppercase
         output_work_book['ADDRESS'] = output_work_book['ADDRESS'].str.upper()
         output_work_book.to_excel(output_file_path, index=False)
 
@@ -209,6 +212,11 @@ def merge():
         func.auto_fit_columns(output_file_path)
 
         set_progress((total_files + 5) / work_progress * 100)
+
+        func.highlight_n_check_prediction(output_file_path)
+        func.auto_fit_columns(output_file_path)
+
+        set_progress((total_files + 6) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
