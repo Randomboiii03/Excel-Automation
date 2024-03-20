@@ -11,7 +11,7 @@ from time import sleep
 import functions as func
 import joblib
 from sklearn.feature_extraction.text import CountVectorizer
-# from predict import load_model_predict
+from predict import load_model_predict
 from train import train_model_save_joblib
 import xlsxwriter
 import numpy as np
@@ -233,6 +233,15 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
+
+
+@app.route('/download_file')
+def download_file():
+    # Path to the file you want to download
+    file_path = './source/template.xlsx'
+
+    # Return the file as an attachment
+    return send_file(file_path, as_attachment=True)
 
 @app.route('/feed', methods=['POST'])
 def feed():
