@@ -19,6 +19,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-vSJso3hzG+L2k0BSH3XlKPzgYxLmKXSJWKANfKO2HcYwSkUZt/JcY9aqw1iV+0fn" crossorigin="anonymous">
 
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"
@@ -263,12 +264,15 @@
             let formData = new FormData();
             formData.append('file', document.getElementById('file').files[0]);
             Swal.fire({
-                title: 'Loading',
-                html: 'Please wait...',
+    title: '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> DATA IS CURRENTLY FEEDING <div class="custom-line"></div></h6>',
+    html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may result in corruption of the model.</p>',
+
+
+
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 willOpen: () => {
-                    Swal.showLoading()
+                    // Swal.showLoading()
                 }
             });
             fetch('/feed', {
@@ -277,7 +281,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                console.log("he3llo")
+                console.log("APPENDING EXCEL")
                     Swal.close(); // Close the loading dialog
                     if (data.status) {
                         
@@ -303,7 +307,20 @@
         });
         
     </script>
-
+ <style>
+      .custom-line {
+        border-bottom: 1px solid rgb(80, 80, 80); /* Set the bottom border style */
+        margin: 5px 0; /* Set the margin to create space around the line */
+        width: 100%; /* Make the line span the full width */
+    }
+    @keyframes rotateSpinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animated-spinner {
+      animation: rotateSpinner 2s linear infinite;
+    }
+  </style>
     <script>
         function showLoader() {
             document.getElementById('uploadText').style.display = 'none'; // Hide the upload text
