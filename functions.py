@@ -7,8 +7,6 @@ from openpyxl import load_workbook
 import pandas as pd
 import os
 
-def get_headers(file_path):
-    return pd.read_excel(file_path).columns.to_list()
 
 def get_total_rows(file_path):
     workbook = load_workbook(file_path)
@@ -37,10 +35,10 @@ def get_index_of_header(excel_file_path, template_header) -> int:
     sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=None)
     if sheet_data.empty:
         return 0
-    cleaned_template_header = clean_string(template_header)
-    header_found = sheet_data.apply(lambda row: find_header(row.values, cleaned_template_header), axis=1)
-    index = header_found.idxmax() if header_found.any() else 0
-    return index
+    for index, row in sheet_data.iterrows():
+        if find_header(row.values, template_header):
+            return index
+    return 0
 
 def map_header(mapping, header):
     cleaned_header = clean_string(header)
@@ -151,8 +149,6 @@ def highlight_n_check_prediction(excel_file_path):
                 cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
             elif compare_address(municipality, address):
                 cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-            else:
-                cell3.value = row["AREA"]
 
     book.save(excel_file_path)
 

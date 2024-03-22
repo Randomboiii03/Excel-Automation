@@ -36,40 +36,47 @@ def download_file():
 def feed():
     status = False
     
-    file = request.files.get('file')  # Safely get file
+    try:
+        file = request.files.get('file')  # Safely get file
 
-    if file:
-        try:
-            file_name = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
-            file.save(file_path)
+        if not file:
+            return jsonify({"message": "No file uploaded", "status": status}), 400
+        
+        file_name = secure_filename(file.filename)
 
-            df1 = pd.read_excel(file_path)
+        if not os.path.exists(app.config['UPLOADED_FILES_DEST']):
+            os.makedirs(app.config['UPLOADED_FILES_DEST'])
 
-            model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
-            df2 = pd.read_excel(model_path)
+        file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
 
-            if list(df1.columns) == list(df2.columns):
-                combined_df = pd.concat([df2, df1], ignore_index=True)
-                combined_df.to_excel(model_path, index=False)
+        file.save(file_path)
 
-                train_model_save_joblib()
+        df1 = pd.read_excel(file_path)
 
-                status = True
-                return jsonify({"message": "New data has been fed", "status": status})
-            else:
-                return jsonify({"message": "Wrong column format or No header", "status": status})
-        except FileNotFoundError:
-            return jsonify({"message": "File not found / No uploads folder", "status": status}), 404
-        except pd.errors.ParserError:
-            return jsonify({"message": "Error parsing Excel file", "status": status}), 400
-        except Exception as e:
-            return jsonify({"message": f"An error occurred: {str(e)}", "status": status}), 500
-        finally:
-            if os.path.exists(file_path):
-                os.remove(file_path)  # Clean up the uploaded file
-    else:
-        return jsonify({"message": "No file uploaded", "status": status}), 400
+        model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
+        df2 = pd.read_excel(model_path)
+
+        if list(df1.columns) == list(df2.columns):
+            combined_df = pd.concat([df2, df1], ignore_index=True)
+            combined_df.to_excel(model_path, index=False)
+
+            df_addresses = pd.DataFrame(model_path, columns=['area-muni', 'address'])
+            train_model_save_joblib(df_addresses)
+
+            status = True
+
+            return jsonify({"message": "New data has been fed", "status": status})
+
+    except FileNotFoundError:
+        return jsonify({"message": "File not found", "status": status}), 404
+    except pd.errors.ParserError:
+        return jsonify({"message": "Error parsing Excel file", "status": status}), 400
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}", "status": status}), 500
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Clean up the uploaded file
+
 
 @app.route('/predict', methods=['POST'])
 def upload():
@@ -109,7 +116,7 @@ def delete():
 @app.route('/merge', methods=['POST'])
 def merge():
     output_file_path = None
-
+    
     try:
         status = False
         
@@ -137,10 +144,9 @@ def merge():
             return jsonify(data_to_return)
 
         template_path = os.path.join(app.config['SOURCE_FILES_DEST'], "template.xlsx")
-
-        template_header = func.get_headers(template_path)
-        datas = [template_header]
-
+        
+        template_header = pd.read_excel(template_path).columns.to_list()
+        
         mapping = {
             "ADDRESS TYPE": "ADD TYPE",
             "ADD": "ADDRESS",
@@ -152,7 +158,7 @@ def merge():
 
         total_files = len(files)
         work_progress = total_files + 6
-
+        
         def set_progress(progress):
             socketio.emit("update progress", progress)
             sleep(1)
@@ -161,13 +167,13 @@ def merge():
         additional_header = set()
         
         set_progress(0)
-
-        for i, file in enumerate(files):
+        
+        for i, file in enumerate(files):         
             excel_file_path = os.path.join(folder_path, file)
             index_header = func.get_index_of_header(excel_file_path, template_header)
             sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=index_header)
             
-            sheet_columns = func.get_headers(os.path.join(folder_path, file))
+            sheet_columns = sheet_data.columns.to_list()
             
             temp_df = pd.DataFrame()
             encoded_columns = set()
@@ -209,14 +215,14 @@ def merge():
             main_df = pd.concat([main_df, temp_df], ignore_index=True)
 
             set_progress((i + 1) / work_progress * 100)
-        
+            
         current_date = datetime.now().strftime("%Y-%m-%d")
         output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
         
         main_df['ADDRESS'] = main_df['ADDRESS'].str.upper()
         main_df.to_excel(output_file_path, index=False)
-
+        
         set_progress((total_files + 1) / work_progress * 100)
 
         model = joblib.load('source\\model.joblib')
@@ -324,6 +330,10 @@ def index():
     complete_message = message + javascript_function
 
     return render_template('index.html', bank_names=bank_names, no_error=status, message=complete_message)
+
+with app.app_context():
+    # Create the database tables
+    db.create_all()
 
 if __name__ == '__main__':
     socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)

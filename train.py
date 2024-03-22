@@ -10,14 +10,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 
-def train_model_save_joblib():
-    try:
-        # Read the Excel file
-        df = pd.read_excel('./source/model.xlsx')
-        
+def train_model_save_joblib(df: pd.DataFrame):
+    try:        
         # Drop rows with NaN values in 'area-muni' or 'address'
         df.dropna(subset=['area-muni', 'address'], inplace=True)
-        
+
         # Splitting the data into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(df['address'], df['area-muni'], test_size=0.2, random_state=42)
         
@@ -39,7 +36,7 @@ def train_model_save_joblib():
         joblib.dump(pipeline, './source/model.joblib')
         print("Model saved to 'model.joblib'")
         
-        return pipeline  # Return the trained model pipeline
+        # return pipeline  # Return the trained model pipeline
         
     except Exception as e:
         print(f"An error occurred: {str(e)}")

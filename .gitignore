@@ -19,3 +19,6 @@ uploads/
 
 # Virtual environment
 venv/
+
+# Database
+instance/
