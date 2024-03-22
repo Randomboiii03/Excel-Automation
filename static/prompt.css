@@ -132,6 +132,35 @@
     }
 
 
-    
+    .toast-custom-class {
+        margin-top: 500px;
+        background: linear-gradient(to right, rgb(231, 226, 226), rgb(194, 228, 162)) !important; 
+      }
+      
+    .toast-custom-class-false {
+        margin-top: 500px;
+        background: linear-gradient(to right, rgb(233, 194, 168), rgb(238, 155, 155)) !important; 
+      }
+      
+    .toast-custom-class-info {
+        margin-top: 500px;
+        background: linear-gradient(to top, rgb(197, 208, 238), rgb(163, 208, 235)) !important; 
+      }
+    .toast-custom-class-cool {
+        margin-top: 500px;
+        background: linear-gradient(to right, rgb(224, 190, 94), rgb(212, 164, 149)) !important; 
+      }
 
-    
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+        z-index: 9999; /* Ensure the overlay is on top of everything */
+    }
+
+    .overlay-hidden {
+        display: none;
+    }
