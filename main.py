@@ -58,9 +58,9 @@ def feed():
                 status = True
                 return jsonify({"message": "New data has been fed", "status": status})
             else:
-                return jsonify({"message": "Wrong column format", "status": status})
+                return jsonify({"message": "Wrong column format or No header", "status": status})
         except FileNotFoundError:
-            return jsonify({"message": "File not found", "status": status}), 404
+            return jsonify({"message": "File not found / No uploads folder", "status": status}), 404
         except pd.errors.ParserError:
             return jsonify({"message": "Error parsing Excel file", "status": status}), 400
         except Exception as e:
@@ -274,7 +274,11 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
-
+@app.route('/sleep')
+def sleep_computer():
+    os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+    return "Computer is going to sleep!"
+    
 @app.route('/', methods=['GET'])
 def index():
     requests_folder = os.path.join(directory_path, "Requests")
