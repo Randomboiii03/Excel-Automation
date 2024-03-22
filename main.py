@@ -77,6 +77,7 @@ def feed():
         if os.path.exists(file_path):
             os.remove(file_path)  # Clean up the uploaded file
 
+
 @app.route('/predict', methods=['POST'])
 def upload():
     file = request.files['file']
@@ -279,7 +280,11 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
-
+@app.route('/sleep')
+def sleep_computer():
+    os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+    return "Computer is going to sleep!"
+    
 @app.route('/', methods=['GET'])
 def index():
     requests_folder = os.path.join(directory_path, "Requests")
