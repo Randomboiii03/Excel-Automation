@@ -331,9 +331,9 @@ def index():
 
     return render_template('index.html', bank_names=bank_names, no_error=status, message=complete_message)
 
-with app.app_context():
-    # Create the database tables
-    db.create_all()
+# with app.app_context():
+#     # Create the database tables
+#     db.create_all()
 
 if __name__ == '__main__':
     socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)

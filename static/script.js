@@ -65,7 +65,20 @@ window.onload = function () {
     })
       .then((response) => response.json())
       .then((data) => {
-        Swal.fire("Delete", data.message, "success");
+        Swal.fire({
+            icon: 'success',
+            title: data.message,
+            timer: 5000, // Adjust as needed
+            
+            timerProgressBar: true,
+            toast: true,
+            position: 'center',
+            showConfirmButton: false,
+            customClass: {
+              popup: 'toast-custom-class-info',
+              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+            }
+          });
       })
       .catch((error) => {
         showMessage(error, "Error!", errorClasses);
@@ -88,10 +101,18 @@ window.onload = function () {
   $("#delete-cancel-button").on("click", function () {
     hideDeleteModal();
     Swal.fire({
-      text: "Files under this campaign are safe!",
-      icon: "info",
-      confirmButtonText: "Proceed",
-    });
+        icon: 'info',
+        title: 'Files under this campaign are safe!',
+        timer: 5000, // Adjust as needed
+        timerProgressBar: true,
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        customClass: {
+          popup: 'toast-custom-class',
+          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+        }
+      });
   });
 
   mergeForm.onsubmit = function (event) {
@@ -111,7 +132,7 @@ window.onload = function () {
         if (data.status) {
           Swal.close();
           folderPath = data.file_path;
-          // downloadFile(data.download_path);
+       
           hideDeleteModal();
           showDeleteModal();
         }
@@ -166,6 +187,7 @@ window.onload = function () {
 
 var invalidAttempts = 0;
 
+
 function toggleForm(formToShow) {
   var forms = ["geocodeForm", "dataFeedForm", "mergeit"];
   forms.forEach(function (formId) {
@@ -173,6 +195,7 @@ function toggleForm(formToShow) {
     form.style.display = formToShow === formId ? "block" : "none";
   });
 }
+
 
 function promptForPassword(formToShow) {
   if (formToShow === "dataFeedForm") {
@@ -187,21 +210,39 @@ function promptForPassword(formToShow) {
       showCancelButton: true,
       confirmButtonText: "Submit",
       preConfirm: (password) => {
-        if (password === "$PMadr!d03252024") {
+        if (password === "123") {
           // Replace '123' with your actual password
           toggleForm(formToShow);
+          Swal.fire({
+            icon: 'success',
+            title: 'Login Successful!',
+            timer: 5000, // Adjust as needed
+            timerProgressBar: true,
+            toast: true,
+            position: 'center',
+            showConfirmButton: false,
+            customClass: {
+              popup: 'toast-custom-class',
+              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+            }
+          });
         } else {
           invalidAttempts++;
-          if (invalidAttempts >= 5) {
-            let countdown = 50; // initial countdown value
+          if (invalidAttempts >= 3) {
+            let countdown = 60; // initial countdown value
+            
+
+            document.getElementById('overlay').classList.remove('overlay-hidden');  
 
             Swal.fire({
               icon: "error",
               title: "Cooldown " + countdown + " seconds",
-              timer: 50000, // update every second
+              timer: 60000, // update every second
               timerProgressBar: false,
+              toast: true,
               showConfirmButton: false,
               allowOutsideClick: false,
+              
               onBeforeOpen: () => {
                 const content = Swal.getContent();
                 if (content) {
@@ -218,17 +259,36 @@ function promptForPassword(formToShow) {
                       //     .then(response => response.text())
                       //     .then(data => console.log(data))
                       //     .catch(error => console.error('Error:', error));
+                      document.getElementById('overlay').classList.add('overlay-hidden');
                     }
                   }, 1000);
                 }
               },
+              customClass: {
+                popup: 'toast-custom-class-cool',
+                backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+              }
             });
+            
           } else {
+            // Swal.fire({
+            //   html: '<i class="fas fa-exclamation-circle" style="font-size: 24px; color:red;"></i> Invalid input.',
+            //   confirmButtonText: "RETRY",
+            //   timer: 10000,
+            // });
             Swal.fire({
-              html: '<i class="fas fa-exclamation-circle" style="font-size: 24px; color:red;"></i> Invalid input.',
-              confirmButtonText: "PROCEED",
-              timer: 10000,
-            });
+                icon: 'error',
+                title: 'Invalid input',
+                timer: 5000, // Adjust as needed
+                timerProgressBar: true,
+                toast: true,
+                position: 'center',
+                showConfirmButton: false,
+                customClass: {
+                  popup: 'toast-custom-class-false',
+                  backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+                }
+              });
           }
         }
       },
@@ -239,17 +299,15 @@ function promptForPassword(formToShow) {
   }
 }
 
+
 document.addEventListener("DOMContentLoaded", function () {
   const navbarToggle = document.getElementById("navbar-toggle");
   const navbar = document.querySelector(".navbar");
-  // Initially position the navbar off-screen
   navbar.style.transform = "translateY(-100%)";
   navbarToggle.addEventListener("change", function () {
     if (navbarToggle.checked) {
-      // Slide the navbar into view when the burger icon is clicked
       navbar.style.transform = "translateY(0)";
     } else {
-      // Slide the navbar out of view when the burger icon is not clicked
       navbar.style.transform = "translateY(-100%)";
     }
   });
@@ -283,20 +341,34 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log(data);
       // Trigger Sweet Alert notification
       Swal.fire({
-        position: "top-end",
-        text: "File processing completed.",
-        icon: "success",
-        confirmButtonText: "PROCEED",
-        timer: 10000,
+        icon: 'success',
+        title: 'File processing completed',
+        timer: 5000, // Adjust as needed
+        timerProgressBar: true,
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        customClass: {
+          popup: 'toast-custom-class',
+          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+        }
       });
     } catch (error) {
       // Handle errors
       console.error("There was an error with the upload:", error);
       // Optionally, trigger an error Sweet Alert notification
       Swal.fire({
-        text: "There was an error with the upload.",
-        icon: "error",
-        confirmButtonText: "OK",
+        icon: 'error',
+        title: 'There was an error with the upload.',
+        timer: 5000, // Adjust as needed
+        timerProgressBar: true,
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        customClass: {
+          popup: 'toast-custom-class-false',
+          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+        }
       });
     }
   });
@@ -324,8 +396,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("APPENDING EXCEL");
-        Swal.close(); // Close the loading dialog
+        console.log("something was wrong");
+        Swal.close(); 
         if (data.status) {
           Swal.fire({
             icon: "success",
