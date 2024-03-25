@@ -223,7 +223,7 @@ def merge():
         main_df.to_excel(output_file_path, index=False)
         
         set_progress((total_files + 1) / work_progress * 100)
-
+        print("-1")
         model = joblib.load('source\\model.joblib')
         output_work_book = pd.read_excel(output_file_path)
 
@@ -252,14 +252,14 @@ def merge():
         output_work_book.loc[prediction_mask, 'MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
         
         output_work_book.to_excel(output_file_path, index=False)
-
+        
         set_progress((total_files + 4) / work_progress * 100)
         
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
-
+        
         set_progress((total_files + 5) / work_progress * 100)
-
+        
         func.highlight_n_check_prediction(output_file_path)
         func.auto_fit_columns(output_file_path)
 
@@ -279,6 +279,7 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
+ 
 @app.route('/sleep')
 def sleep_computer():
     os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
@@ -329,10 +330,6 @@ def index():
     complete_message = message + javascript_function
 
     return render_template('index.html', bank_names=bank_names, no_error=status, message=complete_message)
-
-# with app.app_context():
-#     # Create the database tables
-#     db.create_all()
 
 if __name__ == '__main__':
     socketio.run(app=app, debug=True, host="0.0.0.0", port=8000)
