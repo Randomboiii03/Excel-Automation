@@ -34,11 +34,11 @@ def find_header(row_values, template_header):
 def get_index_of_header(excel_file_path, template_header) -> int:
     sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=None)
     if sheet_data.empty:
-        return 0
+        return -1
     for index, row in sheet_data.iterrows():
         if find_header(row.values, template_header):
             return index
-    return 0
+    return -1
 
 def map_header(mapping, header):
     cleaned_header = clean_string(header)
