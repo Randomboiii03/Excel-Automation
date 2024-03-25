@@ -10,8 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 
-def train_model_save_joblib(df: pd.DataFrame):
+def train_model_save_joblib(model_path):
     try:        
+        df = pd.read_excel(model_path)
+        
         # Drop rows with NaN values in 'area-muni' or 'address'
         df.dropna(subset=['area-muni', 'address'], inplace=True)
 
@@ -43,4 +45,4 @@ def train_model_save_joblib(df: pd.DataFrame):
         return None
 
 if __name__ == "__main__":
-    train_model_save_joblib()
+    train_model_save_joblib('source\\model.xlsx')
