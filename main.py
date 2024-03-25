@@ -170,6 +170,13 @@ def merge():
         for i, file in enumerate(files):         
             excel_file_path = os.path.join(folder_path, file)
             index_header = func.get_index_of_header(excel_file_path, template_header)
+
+            if index_header == -1:
+                message = f"Can't find header: {file}"
+                data_to_return = {'message': message, 'status': status}
+                return jsonify(data_to_return)
+
+
             sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=index_header)
             
             sheet_columns = sheet_data.columns.to_list()
