@@ -60,8 +60,7 @@ def feed():
             combined_df = pd.concat([df2, df1], ignore_index=True)
             combined_df.to_excel(model_path, index=False)
 
-            df_addresses = pd.DataFrame(model_path, columns=['area-muni', 'address'])
-            train_model_save_joblib(df_addresses)
+            train_model_save_joblib(model_path)
 
             status = True
 

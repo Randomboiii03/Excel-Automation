@@ -401,12 +401,29 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.status) {
           Swal.fire({
             icon: "success",
-            text: data.message,
+            title: data.message,
+            timer: 5000, // Adjust as needed
+            toast: true,
+            position: 'center',
+            showConfirmButton: false,
+            customClass: {
+              popup: 'toast-custom-class',
+              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+            }
           });
         } else {
           Swal.fire({
             icon: "error",
-            text: data.message,
+            title: data.message,
+            timer: 5000, // Adjust as needed
+            timerProgressBar: true,
+            toast: true,
+            position: 'center',
+            showConfirmButton: false,
+            customClass: {
+              popup: 'toast-custom-class-false',
+              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+            }
           });
         }
       })
@@ -414,7 +431,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Error:", error);
         Swal.fire({
           icon: "error",
-          text: "An error occurred while processing the request.",
+          title: "An error occurred while processing the request.",
+          timer: 5000, // Adjust as needed
+          timerProgressBar: true,
+          toast: true,
+          position: 'center',
+          showConfirmButton: false,
+          customClass: {
+            popup: 'toast-custom-class-false',
+            backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+          }
         });
       });
   });
