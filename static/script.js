@@ -357,19 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Handle errors
       console.error("There was an error with the upload:", error);
       // Optionally, trigger an error Sweet Alert notification
-      Swal.fire({
-        icon: 'error',
-        title: 'There was an error with the upload.',
-        timer: 5000, // Adjust as needed
-        timerProgressBar: true,
-        toast: true,
-        position: 'center',
-        showConfirmButton: false,
-        customClass: {
-          popup: 'toast-custom-class-false',
-          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-        }
-      });
+     
     }
   });
 });
@@ -467,3 +455,58 @@ function showTooltip() {
 function hideTooltip() {
   document.getElementById("tooltipContent").classList.add("hidden");
 }
+
+    function showLoading() {
+        var fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length === 0) {
+            // If no file is selected, show error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Please Input a File.',
+                timer: 5000, // Adjust as needed
+                timerProgressBar: true,
+                toast: true,
+                position: 'center',
+                showConfirmButton: false,
+                customClass: {
+                popup: 'toast-custom-class-false',
+                backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+                }
+            });
+        } else {
+            // Check if the selected file is valid (xlsx or xls)
+            var validExtensions = ['xlsx', 'xls'];
+            var fileName = fileInput.files[0].name;
+            var fileExtension = fileName.split('.').pop().toLowerCase();
+            if (!validExtensions.includes(fileExtension)) {
+                // If the file extension is not valid, show error message
+               
+                Swal.fire({
+                icon: 'error',
+                title: 'Invalid File Type.',
+                text: 'Please select a valid Excel file (xlsx or xls).',
+                timer: 5000, // Adjust as needed
+                timerProgressBar: true,
+                toast: true,
+                position: 'center',
+                showConfirmButton: false,
+                customClass: {
+                popup: 'toast-custom-class-false',
+                backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+                }
+            });
+            } else {
+                // Show the loading screen
+                Swal.fire({
+                    title: '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> PREDICTING <div class="custom-line"></div></h6>',
+                    html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may affect the prediction result.</p>',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        // Submit the form
+                        document.getElementById('uploadForm').submit();
+                    },
+                });
+            }
+        }
+    }

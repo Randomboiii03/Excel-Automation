@@ -57,11 +57,11 @@
                         <label
                             class="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             for="fileInput">SELECT FILE:</label>
-                        <input type="file" id="fileInput" accepts=".xlsx, .xls" class="form-control-file" name="file"
+                        <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-control-file" name="file"
                             class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
                         <!-- Add SweetAlert loading screen here -->
                         <button type="submit"
-                            class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded" onclick="showLoading()">Upload</button>
+                            class="btn btn-primary bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mt-2 rounded" onclick="showLoading()">Upload</button>
                     </div>
                 </div>
             </form>
@@ -69,22 +69,6 @@
         </div>
     </div>
 </div>
-<script>
-    function showLoading() {
-        Swal.fire({
-      title:
-        '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> PREDICTING <div class="custom-line"></div></h6>',
-      html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may affect the prediction result.</p>',
-
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      willOpen: () => {
-        // Swal.showLoading()
-      },
-    });
-    }
-</script>
-
 </div>
 <div id="dataFeedForm" class="popup-form flex flex-col items-center p-5 rounded">
     <h1 class="text-2xl text-center font-bold mb-5 mt-2">DATA FEED</h1>

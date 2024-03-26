@@ -4,52 +4,58 @@ from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from openpyxl import load_workbook
 import functions as func
+from time import time
+import os
 
 def load_model_predict(file_path):
-        # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
-    # Load the model
-    model = joblib.load('source\\model.joblib')
+    try:
+            # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
+        # Load the model
+        model = joblib.load('source\\model.joblib')
 
-    # Assume `addresses.xlsx` contains a column 'address' with the addresses to predict
-    df_to_predict = pd.read_excel(file_path)
+        # Assume `addresses.xlsx` contains a column 'address' with the addresses to predict
+        df_to_predict = pd.read_excel(file_path)
 
-    # Drop rows with NaN values in 'address'
-    df_to_predict.dropna(subset=['address'], inplace=True)
-    predictions = model.predict(df_to_predict['address'])
+        # Drop rows with NaN values in 'address'
+        df_to_predict.dropna(subset=['address'], inplace=True)
+        predictions = model.predict(df_to_predict['address'].astype(str))
 
-    area_munis = [prediction.split('-') for prediction in predictions]
-    
-    temp_df = pd.DataFrame()
-    
-    temp_df['ADDRESS'] = df_to_predict['address']
-    
-    # Adding predictions to the DataFrame
-    temp_df['AREA'] = [area_muni[0] for area_muni in area_munis]
-    temp_df['MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
-    temp_df['FINAL AREA'] = ''
-    temp_df['AUTOFIELD DATE'] = ''
-    
-    result_path = 'uploads\\predictions.xlsx'
-
-    # Saving the predictions to a new Excel file
-    temp_df.to_excel(result_path, index=False)
-
-    func.highlight_n_check_prediction(result_path)
-    func.auto_fit_columns(result_path)
-
-    wb = load_workbook(result_path)
-    ws = wb.active
-
-    num_columns = ws.max_column
-
-    for row in ws.iter_rows(min_row=1, max_row=1):
-        last_cell = row[num_columns - 1]
-        ws.delete_cols(last_cell.column, 1)
-        break
+        area_munis = [prediction.split('-') for prediction in predictions]
         
-    wb.save(result_path)
+        temp_df = pd.DataFrame()
+        
+        temp_df['ADDRESS'] = df_to_predict['address']
+        
+        # Adding predictions to the DataFrame
+        temp_df['AREA'] = [area_muni[0] for area_muni in area_munis]
+        temp_df['MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
+        temp_df['FINAL AREA'] = ''
+        temp_df['AUTOFIELD DATE'] = ''
+        
+        result_path = f'uploads\\predictions.xlsx'
 
-    print("Predictions saved to 'predictions.xlsx'")
+        # Saving the predictions to a new Excel file
+        temp_df.to_excel(result_path, index=False)
+
+        func.highlight_n_check_prediction(result_path)
+        func.auto_fit_columns(result_path)
+
+        wb = load_workbook(result_path)
+        ws = wb.active
+
+        num_columns = ws.max_column
+
+        for row in ws.iter_rows(min_row=1, max_row=1):
+            last_cell = row[num_columns - 1]
+            ws.delete_cols(last_cell.column, 1)
+            ws.delete_cols(last_cell.column -1, 1)
+            break
+            
+        wb.save(result_path)
+
+        print("Predictions saved to 'predictions.xlsx'")
+    except Exception as e:
+        print(e)
     
     return result_path
 
