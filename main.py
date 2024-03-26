@@ -81,6 +81,10 @@ def feed():
 def upload():
     file = request.files['file']
     file_name = secure_filename(file.filename)
+
+    if not os.path.exists(app.config['UPLOADED_FILES_DEST']):
+        os.makedirs(app.config['UPLOADED_FILES_DEST'])
+
     file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
     file.save(file_path)
 
@@ -88,8 +92,11 @@ def upload():
         result_path = load_model_predict(file_path)
         
         return send_file(result_path, as_attachment=True)
+    except Exception as e:
+        return f'Error: {e}', 500
     finally:
-        os.remove(file_path)  # Clean up the uploaded file
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Clean up the uploaded file
 
 @app.route('/delete', methods=['POST'])
 def delete():
