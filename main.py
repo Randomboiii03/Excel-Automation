@@ -13,6 +13,7 @@ import joblib
 from predict import load_model_predict
 from train import train_model_save_joblib
 import numpy as np
+from database import DB as db
 
 
 app = Flask(__name__)
@@ -25,6 +26,8 @@ app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
+db().create()
+
 @app.route('/download_file')
 def download_file():
     # Path to the file you want to download
@@ -35,13 +38,11 @@ def download_file():
 
 @app.route('/feed', methods=['POST'])
 def feed():
-    status = False
-    
     try:
         file = request.files.get('file')  # Safely get file
 
         if not file:
-            return jsonify({"message": "No file uploaded", "status": status}), 400
+            return jsonify({"message": "No file uploaded", "status": False}), 400
         
         file_name = secure_filename(file.filename)
 
@@ -49,31 +50,32 @@ def feed():
             os.makedirs(app.config['UPLOADED_FILES_DEST'])
 
         file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
-
         file.save(file_path)
 
-        df1 = pd.read_excel(file_path)
+        df = pd.read_excel(file_path)
 
-        # THIS IS WHERE POSTGRES SHOULD BE...
-        model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
-        df2 = pd.read_excel(model_path)
+        if list(df.columns) != ['area-muni','address']:
+            return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
 
-        if list(df1.columns) == list(df2.columns):
-            combined_df = pd.concat([df2, df1], ignore_index=True)
-            combined_df.to_excel(model_path, index=False)
+        inserted_data = db().insert(df)
+        print("INSERTED: ",0)
+        if inserted_data < 0:
+            return jsonify({"message": "Something went wrong with database", "status": False}), 404
+        
+        elif inserted_data == 0:
+            return jsonify({"message": "All data is already fed", "status": True}), 200
+    
+        if not train_model_save_joblib():
+            return jsonify({"message": "Something went creating a new model", "status": False}), 404
 
-            train_model_save_joblib(model_path)
-
-            status = True
-
-            return jsonify({"message": "New data has been fed", "status": status})
+        return jsonify({"message": "New data has been fed", "status": True})
 
     except FileNotFoundError:
-        return jsonify({"message": "File not found", "status": status}), 404
+        return jsonify({"message": "File not found", "status": False}), 404
     except pd.errors.ParserError:
-        return jsonify({"message": "Error parsing Excel file", "status": status}), 400
+        return jsonify({"message": "Error parsing Excel file", "status": False}), 400
     except Exception as e:
-        return jsonify({"message": f"An error occurred: {str(e)}", "status": status}), 500
+        return jsonify({"message": f"An error occurred: {str(e)}", "status": False}), 500
     finally:
         if os.path.exists(file_path):
             os.remove(file_path)  # Clean up the uploaded file
@@ -103,8 +105,6 @@ def upload():
 @app.route('/delete', methods=['POST'])
 def delete():
     try:
-        status = False
-
         data = request.json
         folder_path = data.get('data')
 
@@ -112,9 +112,9 @@ def delete():
 
         bank_name = folder_path.split("\\")
 
-        data_to_return = {'message': f"Deleted all files in folder: {bank_name[-1]}", 'status': status}
+        data_to_return = {'message': f"Deleted all files in folder: {bank_name[-1]}", 'status': True}
     except Exception as e:
-        data_to_return = {'message': f"Error: {e}", 'status': status}
+        data_to_return = {'message': f"Error: {e}", 'status': False}
 
     return jsonify(data_to_return)
 
