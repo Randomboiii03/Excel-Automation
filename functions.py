@@ -7,11 +7,10 @@ import pandas as pd
 import os
 
 
-def get_total_rows(file_path):
+def get_total_rows(file_path) -> int:
     workbook = load_workbook(file_path)
     worksheet = workbook.active
-    total_rows = worksheet.max_row
-    return total_rows
+    return worksheet.max_row
 
 def clean_string(input_string):
     return re.sub(r'[^a-zA-Z0-9\s]', ' ', input_string).upper()

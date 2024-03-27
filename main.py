@@ -14,6 +14,7 @@ from predict import load_model_predict
 from train import train_model_save_joblib
 import numpy as np
 
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -53,6 +54,7 @@ def feed():
 
         df1 = pd.read_excel(file_path)
 
+        # THIS IS WHERE POSTGRES SHOULD BE...
         model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.xlsx")
         df2 = pd.read_excel(model_path)
 
@@ -173,7 +175,6 @@ def merge():
 
             if index_header == -1:
                 return jsonify({'message': f"Can't find header: {file}", 'status': status})
-
 
             sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=index_header)
             
