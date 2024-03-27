@@ -9,7 +9,7 @@ import os
 
 def load_model_predict(file_path):
     try:
-            # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
+        # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
         # Load the model
         model = joblib.load('source\\model.joblib')
 
@@ -20,17 +20,20 @@ def load_model_predict(file_path):
         df_to_predict.dropna(subset=['address'], inplace=True)
         predictions = model.predict(df_to_predict['address'].astype(str))
 
-        area_munis = [prediction.split('-') for prediction in predictions]
-        
+        # Convert predictions to a list of tuples
+        area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
+
         temp_df = pd.DataFrame()
-        
+
         temp_df['ADDRESS'] = df_to_predict['address']
-        
+
         # Adding predictions to the DataFrame
-        temp_df['AREA'] = [area_muni[0] for area_muni in area_munis]
-        temp_df['MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
+        temp_df['AREA'], temp_df['MUNICIPALITY'] = zip(*area_munis)
         temp_df['FINAL AREA'] = ''
         temp_df['AUTOFIELD DATE'] = ''
+
+        if not os.path.exists('uploads'):
+            os.makedirs('uploads')
         
         result_path = f'uploads\\predictions.xlsx'
 
@@ -60,4 +63,4 @@ def load_model_predict(file_path):
     return result_path
 
 if __name__ == "__main__":
-    load_model_predict('source\\address.xlsx')
+    load_model_predict('source\\sample-address.xlsx')

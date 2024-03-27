@@ -1,4 +1,3 @@
-      
 from fuzzywuzzy import fuzz
 import json
 import re
@@ -87,36 +86,40 @@ def drop_row_with_one_cell(excel_file_path):
 
 def auto_fit_columns(excel_file_path):
     wb = load_workbook(excel_file_path)
-    for sheet_name in wb.sheetnames:
-        ws = wb[sheet_name]
-        header_fill = PatternFill(start_color="D4AC0D", end_color="D4AC0D", fill_type="solid")  # Gray color
-        header_font = Font(bold=True)
+    
+    first_sheet_name = wb.sheetnames[0]
+    ws = wb[first_sheet_name]
 
-        for col_idx, column_cells in enumerate(ws.columns, start=1):
-            max_length = max(len(str(cell.value)) for cell in column_cells)
-            adjusted_width = (max_length + 2) * 1.2
-            ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = adjusted_width
+    header_fill = PatternFill(start_color="D4AC0D", end_color="D4AC0D", fill_type="solid")  # Gray color
+    header_font = Font(bold=True)
 
-            for cell in column_cells:
-                if cell.row == 1:
-                    cell.fill = header_fill
-                    cell.font = header_font
-                    cell.value = str(cell.value).upper()
+    max_lengths = {}
+
+    for col_idx, column_cells in enumerate(ws.columns, start=1):
+        # Calculate max length for each column and store it in the dictionary
+        max_lengths[col_idx] = max(len(str(cell.value)) for cell in column_cells)
+
+    # Adjust column widths based on max lengths
+    for col_idx, max_length in max_lengths.items():
+        adjusted_width = (max_length + 2) * 1.1
+        ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = adjusted_width
+
+    # Format header cells
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.value = str(cell.value).upper()
                     
     wb.save(excel_file_path)
 
 def highlight_n_check_prediction(excel_file_path):
 
     def compare_address(str1, address, threshold=60):
-        similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
-        new_ratio = similarity_ratio <= threshold
-        
-        if new_ratio:
-            check = str1.replace(' ', '').replace('Ñ', 'N').lower() not in address.replace(' ', '').replace('Ñ', 'N').lower()
-            if not check:
-                new_ratio = check
+        if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
+            return False
 
-        return new_ratio
+        similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
+        return similarity_ratio <= threshold
     
     df = pd.read_excel(excel_file_path)
     area_index = df.columns.get_loc('AREA') + 1

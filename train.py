@@ -28,6 +28,7 @@ def train_model_save_joblib(model_path):
         
         # Training the model
         pipeline.fit(X_train, y_train)
+        print("Start predicting...")
         
         # Evaluating the model
         y_pred = pipeline.predict(X_test)

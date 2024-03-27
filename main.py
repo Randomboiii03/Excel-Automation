@@ -110,12 +110,9 @@ def delete():
 
         bank_name = folder_path.split("\\")
 
-        message = f"Deleted all files in folder: {bank_name[-1]}"
-        data_to_return = {'message': message, 'status': status}
+        data_to_return = {'message': f"Deleted all files in folder: {bank_name[-1]}", 'status': status}
     except Exception as e:
-        message = f"{e}"
-
-    data_to_return = {'message': message, 'status': status}
+        data_to_return = {'message': f"Error: {e}", 'status': status}
 
     return jsonify(data_to_return)
 
@@ -127,9 +124,7 @@ def merge():
         status = False
         
         if not os.path.exists(directory_path):
-            message = f"The system cannot find the path specified: {directory_path}"
-            data_to_return = {'message': message, 'status': status}
-            return jsonify(data_to_return)
+            return jsonify({'message': f"The system cannot find the path specified: {directory_path}", 'status': status})
         
         bank_name = request.form['bank_name']
         
@@ -145,9 +140,7 @@ def merge():
             os.makedirs(folder_path)
 
         if not files:
-            message = f"No existing file inside {bank_name}"
-            data_to_return = {'message': message, 'status': status}
-            return jsonify(data_to_return)
+            return jsonify({'message': f"No existing file inside {bank_name}", 'status': status})
 
         template_path = os.path.join(app.config['SOURCE_FILES_DEST'], "template.xlsx")
         
@@ -179,9 +172,7 @@ def merge():
             index_header = func.get_index_of_header(excel_file_path, template_header)
 
             if index_header == -1:
-                message = f"Can't find header: {file}"
-                data_to_return = {'message': message, 'status': status}
-                return jsonify(data_to_return)
+                return jsonify({'message': f"Can't find header: {file}", 'status': status})
 
 
             sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=index_header)
@@ -237,18 +228,18 @@ def merge():
         main_df.to_excel(output_file_path, index=False)
         
         set_progress((total_files + 1) / work_progress * 100)
-        print("-1")
+        
         model = joblib.load('source\\model.joblib')
-        output_work_book = pd.read_excel(output_file_path)
+        wb = pd.read_excel(output_file_path)
 
         set_progress((total_files + 2) / work_progress * 100)
         
-        existing_mask = (output_work_book['AREA'].notna()) & (output_work_book['MUNICIPALITY'].notna())
+        existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
         
-        addresses = output_work_book.loc[~existing_mask, 'ADDRESS'].tolist()
-        addresses = output_work_book.loc[~existing_mask & output_work_book['ADDRESS'].notna(), 'ADDRESS'].tolist()
+        addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
+        addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
         
-        prediction_mask = output_work_book['ADDRESS'].isin(addresses)
+        prediction_mask = wb['ADDRESS'].isin(addresses)
         print(f'Number of addresses to predict: {len(addresses)}')  # Debugging line
 
         set_progress((total_files + 3) / work_progress * 100)
@@ -260,12 +251,11 @@ def merge():
 
         print(f'Number of predictions: {len(predictions)}')  # Debugging line
         
-        area_munis = [prediction.split('-') for prediction in predictions]
+        area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
         
-        output_work_book.loc[prediction_mask, 'AREA'] = [area_muni[0] for area_muni in area_munis]
-        output_work_book.loc[prediction_mask, 'MUNICIPALITY'] = [area_muni[1] for area_muni in area_munis]
+        wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
         
-        output_work_book.to_excel(output_file_path, index=False)
+        wb.to_excel(output_file_path, index=False)
         
         set_progress((total_files + 4) / work_progress * 100)
         
