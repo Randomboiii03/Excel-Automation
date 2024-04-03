@@ -310,9 +310,10 @@ def index():
         status = True
         
 
-    # JavaScript function to copy the folder name to clipboard
+     # JavaScript function to copy the folder name to clipboard
     javascript_function = """
-    <script>
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
   function copyToClipboard(text) {
     var tempInput = document.createElement("input");
     tempInput.value = text;
@@ -325,11 +326,15 @@ def index():
         title: "Paste In file manager:",
         text: text,
         showCancelButton: false,
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "OK"
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        timer: 3000
     });
-}
-    </script>
+  }
+</script>
+
+
     """
 
     complete_message = message + javascript_function
