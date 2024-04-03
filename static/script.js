@@ -161,9 +161,9 @@ window.onload = function () {
       // Display SweetAlert confirmation
       Swal.fire({
         // title: "Ongoing Merging Process",
-        text: "There is an ongoing merging process. Are you sure you want to leave?",
-        iconHtml: '<i class="fa fa-refresh fa-spin" style="color:black;"></i>',
+        text: "There is an on-going merging process. Are you sure you want to leave?",
         showCancelButton: true,
+        toast: true,
         confirmButtonColor: "#bf3232",
         cancelButtonColor: "#05b531",
         confirmButtonText: "Yes, leave",
@@ -298,6 +298,7 @@ function promptForPassword(formToShow) {
     toggleForm(formToShow);
   }
 }
+
 
 
 document.addEventListener("DOMContentLoaded", function () {
