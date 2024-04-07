@@ -13,9 +13,10 @@ import joblib
 from predict import load_model_predict
 from train import train_model_save_joblib
 import numpy as np
-from database import DB as db
 
-
+from tqdm import tqdm
+import re
+import json
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -26,7 +27,7 @@ app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
-db().create()
+
 
 @app.route('/download_file')
 def download_file():
@@ -224,39 +225,100 @@ def merge():
         current_date = datetime.now().strftime("%Y-%m-%d")
         output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
-        
+   
+        with open('source/all.json', 'r') as json_file:
+            all_datas = json.load(json_file)
+
+        with open('source/zipcode.json', 'r') as json_file:
+            zipcode_data = json.load(json_file)
+
+        with open('source/area_muni.json', 'r') as json_file:
+            area_muni_data = json.load(json_file)
+
+        with open('source/muni.json', 'r') as json_file:
+            muni_data = json.load(json_file)
+            
         main_df['ADDRESS'] = main_df['ADDRESS'].str.upper()
         main_df.to_excel(output_file_path, index=False)
         
-        set_progress((total_files + 1) / work_progress * 100)
-        
-        model = joblib.load('source\\model.joblib')
-        wb = pd.read_excel(output_file_path)
+        area_munis = [''] * len(main_df)
+        count_not_found = 0
 
+        def clean_address(address):
+            address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
+            return ' '.join(list(filter(lambda item: item.strip(), address)))
+
+        def check_address(place, search_term):
+            return place.replace(' ', '') in search_term or place in search_term
+
+        def check_in_data(orig_address):
+            for province in area_muni_data:
+                if "SEARCH" in area_muni_data[province]:
+                    if check_address(area_muni_data[province]["SEARCH"], orig_address):
+                        for municipality in area_muni_data[province]['MUNICIPALITIES']:
+                            if check_address(municipality, orig_address):
+                                return [province, municipality]
+
+                if check_address(province, orig_address):
+                    for municipality in area_muni_data[province]['MUNICIPALITIES']:
+                        if check_address(municipality, orig_address):
+                            return [province, municipality]
+
+                    for barangay in area_muni_data[province]['BARANGAYS']:
+                        for key, value in barangay.items():
+                            if check_address(key, orig_address):
+                                return [province, value]
+
+            for zipcode in zipcode_data:
+                if check_address(zipcode, orig_address):
+                    return [zipcode_data[str(zipcode)]['PROVINCE'], zipcode_data[str(zipcode)]['MUNICIPALITY']]
+
+            for data in all_datas:
+                region = data['REGION']
+                province = data['PROVINCE']
+                municipality = data['MUNICIPALITY']
+                barangay = data['BARANGAY']
+
+                if check_address(municipality, orig_address):
+                    if check_address(province, orig_address) or (check_address(barangay, orig_address) or check_address(region, orig_address)):
+                        return [province, municipality]
+
+            for data in muni_data:
+                province = data['PROVINCE']
+                municipality = data['MUNICIPALITY']
+
+                if check_address(municipality, orig_address):
+                    return [province, municipality]
+
+            nonlocal count_not_found
+            count_not_found += 1
+            return None
         set_progress((total_files + 2) / work_progress * 100)
-        
-        existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
-        
-        addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
-        addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
-        
-        prediction_mask = wb['ADDRESS'].isin(addresses)
-        print(f'Number of addresses to predict: {len(addresses)}')  # Debugging line
+        def search(index, orig_address):
+            result = check_in_data(clean_address(orig_address).upper())
 
-        set_progress((total_files + 3) / work_progress * 100)
-        
-        if addresses:
-            predictions = model.predict(addresses) 
-        else:
-            predictions = []
+            if result: 
+                area_munis[index] = f"{result[0]}-{result[1]}"
 
-        print(f'Number of predictions: {len(predictions)}')  # Debugging line
-        
-        area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
-        
-        wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
-        
-        wb.to_excel(output_file_path, index=False)
+        with tqdm(total=len(main_df['ADDRESS'])) as pbr:
+            for index, orig_address in enumerate(main_df['ADDRESS']):
+                search(index, orig_address)
+
+                pbr.update(1)
+        if 'AREA' in main_df.columns:
+            main_df['AREA'] = ''
+        if 'MUNICIPALITY' in main_df.columns:
+            main_df['MUNICIPALITY'] = ''
+        main_df["area-muni"] = area_munis
+        # Splitting the "area-muni" column into "area" and "municipality" columns
+        main_df[['AREA', 'MUNICIPALITY']] = main_df['area-muni'].str.split('-', n=1, expand=True)
+
+        # # Dropping the original "area-muni" column
+        main_df.drop(columns=['area-muni'], inplace=True)
+        print(f'Not Found: {count_not_found}\nFound: {len(area_munis) - count_not_found}')
+        print('FINISHED')
+
+        main_df.to_excel(output_file_path, index=False)
         
         set_progress((total_files + 4) / work_progress * 100)
         
@@ -265,7 +327,7 @@ def merge():
         
         set_progress((total_files + 5) / work_progress * 100)
         
-        func.highlight_n_check_prediction(output_file_path)
+   
         func.auto_fit_columns(output_file_path)
 
         set_progress((total_files + 6) / work_progress * 100)
@@ -284,6 +346,7 @@ def merge():
     sleep(1)
 
     return jsonify(data_to_return)
+
  
 @app.route('/sleep')
 def sleep_computer():
