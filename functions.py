@@ -145,12 +145,15 @@ def highlight_n_check_prediction(excel_file_path):
             area = str(row["AREA"]).lower()
             municipality = str(row["MUNICIPALITY"]).lower()
 
-            if compare_address(area, address) and compare_address(municipality, address):
+            # if compare_address(area, address) and compare_address(municipality, address):
+            #     cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+            # elif compare_address(area, address):
+            #     cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+            # elif compare_address(municipality, address):
+            #     cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+
+            if not area and not municipality:
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
-            elif compare_address(area, address):
-                cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-            elif compare_address(municipality, address):
-                cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
 
     book.save(excel_file_path)
 

@@ -9,14 +9,16 @@ from datetime import datetime
 from flask_socketio import SocketIO
 from time import sleep, time
 import functions as func
-import joblib
-from predict import load_model_predict
-from train import train_model_save_joblib
+# import joblib
+# from predict import load_model_predict
+# from train import train_model_save_joblib
 import numpy as np
-
 from tqdm import tqdm
 import re
 import json
+from geocode import Geocode
+
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -26,8 +28,6 @@ app.config['UPLOADED_FILES_DEST'] = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
-
-
 
 @app.route('/download_file')
 def download_file():
@@ -159,7 +159,7 @@ def merge():
         }
 
         total_files = len(files)
-        work_progress = total_files + 6
+        work_progress = total_files + 4
         
         def set_progress(progress):
             socketio.emit("update progress", progress)
@@ -225,112 +225,30 @@ def merge():
         current_date = datetime.now().strftime("%Y-%m-%d")
         output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
-   
-        with open('source/all.json', 'r') as json_file:
-            all_datas = json.load(json_file)
 
-        with open('source/zipcode.json', 'r') as json_file:
-            zipcode_data = json.load(json_file)
+        geocode = Geocode()
 
-        with open('source/area_muni.json', 'r') as json_file:
-            area_muni_data = json.load(json_file)
+        print('PREDICTING...')
+        for index, address in enumerate(main_df['ADDRESS']):
+            result = geocode.search(address)
+            # print(f"{index} - {address}")
+            if result is not None:
+                main_df.loc[index, 'AREA'] = result[0]
+                main_df.loc[index, 'MUNICIPALITY'] = result[1]
 
-        with open('source/muni.json', 'r') as json_file:
-            muni_data = json.load(json_file)
-            
-        main_df['ADDRESS'] = main_df['ADDRESS'].str.upper()
-        main_df.to_excel(output_file_path, index=False)
-        
-        area_munis = [''] * len(main_df)
-        count_not_found = 0
-
-        def clean_address(address):
-            address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
-            return ' '.join(list(filter(lambda item: item.strip(), address)))
-
-        def check_address(place, search_term):
-            return place.replace(' ', '') in search_term or place in search_term
-
-        def check_in_data(orig_address):
-            for province in area_muni_data:
-                if "SEARCH" in area_muni_data[province]:
-                    if check_address(area_muni_data[province]["SEARCH"], orig_address):
-                        for municipality in area_muni_data[province]['MUNICIPALITIES']:
-                            if check_address(municipality, orig_address):
-                                return [province, municipality]
-
-                if check_address(province, orig_address):
-                    for municipality in area_muni_data[province]['MUNICIPALITIES']:
-                        if check_address(municipality, orig_address):
-                            return [province, municipality]
-
-                    for barangay in area_muni_data[province]['BARANGAYS']:
-                        for key, value in barangay.items():
-                            if check_address(key, orig_address):
-                                return [province, value]
-
-            for zipcode in zipcode_data:
-                if check_address(zipcode, orig_address):
-                    return [zipcode_data[str(zipcode)]['PROVINCE'], zipcode_data[str(zipcode)]['MUNICIPALITY']]
-
-            for data in all_datas:
-                region = data['REGION']
-                province = data['PROVINCE']
-                municipality = data['MUNICIPALITY']
-                barangay = data['BARANGAY']
-
-                if check_address(municipality, orig_address):
-                    if check_address(province, orig_address) or (check_address(barangay, orig_address) or check_address(region, orig_address)):
-                        return [province, municipality]
-
-            for data in muni_data:
-                province = data['PROVINCE']
-                municipality = data['MUNICIPALITY']
-
-                if check_address(municipality, orig_address):
-                    return [province, municipality]
-
-            nonlocal count_not_found
-            count_not_found += 1
-            return None
-        set_progress((total_files + 2) / work_progress * 100)
-        def search(index, orig_address):
-            result = check_in_data(clean_address(orig_address).upper())
-
-            if result: 
-                area_munis[index] = f"{result[0]}-{result[1]}"
-
-        with tqdm(total=len(main_df['ADDRESS'])) as pbr:
-            for index, orig_address in enumerate(main_df['ADDRESS']):
-                search(index, orig_address)
-
-                pbr.update(1)
-        if 'AREA' in main_df.columns:
-            main_df['AREA'] = ''
-        if 'MUNICIPALITY' in main_df.columns:
-            main_df['MUNICIPALITY'] = ''
-        main_df["area-muni"] = area_munis
-        # Splitting the "area-muni" column into "area" and "municipality" columns
-        main_df[['AREA', 'MUNICIPALITY']] = main_df['area-muni'].str.split('-', n=1, expand=True)
-
-        # # Dropping the original "area-muni" column
-        main_df.drop(columns=['area-muni'], inplace=True)
-        print(f'Not Found: {count_not_found}\nFound: {len(area_munis) - count_not_found}')
-        print('FINISHED')
+        print(f"NOT FOUND: {geocode.count_not_found}")
 
         main_df.to_excel(output_file_path, index=False)
-        
-        set_progress((total_files + 4) / work_progress * 100)
+        set_progress((total_files + 1) / work_progress * 100)
         
         func.drop_row_with_one_cell(output_file_path)
-        func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
-        
-        set_progress((total_files + 5) / work_progress * 100)
-        
-   
-        func.auto_fit_columns(output_file_path)
+        set_progress((total_files + 2) / work_progress * 100)
 
-        set_progress((total_files + 6) / work_progress * 100)
+        func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
+        set_progress((total_files + 3) / work_progress * 100)
+        
+        func.auto_fit_columns(output_file_path)
+        set_progress((total_files + 4) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
@@ -338,7 +256,7 @@ def merge():
     except Exception as e:
         message = f"{e}"
         
-        if output_file_path:
+        if os.path.exists(output_file_path):
             os.remove(output_file_path)
         
     data_to_return = {'message': message, 'file_path': folder_path, 'status': status}
@@ -347,7 +265,6 @@ def merge():
 
     return jsonify(data_to_return)
 
- 
 @app.route('/sleep')
 def sleep_computer():
     os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
@@ -396,8 +313,6 @@ def index():
     });
   }
 </script>
-
-
     """
 
     complete_message = message + javascript_function
