@@ -129,6 +129,8 @@ def highlight_n_check_prediction(excel_file_path):
     book = load_workbook(excel_file_path)
     sheet = book.active
 
+    pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+
     for row_index, row in df.iterrows():
         address = str(row['ADDRESS']).lower()
 
@@ -136,6 +138,11 @@ def highlight_n_check_prediction(excel_file_path):
         cell2 = sheet.cell(row=row_index + 2, column=municipality_index)
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
+
+        # cell3.value = cell4.value = ''
+
+        # if cell1.value is None and cell2.value is None:
+        #     cell1.fill = cell2.fill = pattern_fill
 
         if not address.strip():
             cell1.value = cell2.value = ''
@@ -145,15 +152,12 @@ def highlight_n_check_prediction(excel_file_path):
             area = str(row["AREA"]).lower()
             municipality = str(row["MUNICIPALITY"]).lower()
 
-            # if compare_address(area, address) and compare_address(municipality, address):
-            #     cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
-            # elif compare_address(area, address):
-            #     cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-            # elif compare_address(municipality, address):
-            #     cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-
-            if not area and not municipality:
+            if compare_address(area, address) and compare_address(municipality, address):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+            elif compare_address(area, address):
+                cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+            elif compare_address(municipality, address):
+                cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
 
     book.save(excel_file_path)
 

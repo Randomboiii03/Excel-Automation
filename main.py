@@ -159,7 +159,7 @@ def merge():
         }
 
         total_files = len(files)
-        work_progress = total_files + 4
+        work_progress = total_files + 5
         
         def set_progress(progress):
             socketio.emit("update progress", progress)
@@ -227,11 +227,11 @@ def merge():
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
 
         geocode = Geocode()
-
+        count = []
         print('PREDICTING...')
         for index, address in enumerate(main_df['ADDRESS']):
             result = geocode.search(address)
-            # print(f"{index} - {address}")
+            
             if result is not None:
                 main_df.loc[index, 'AREA'] = result[0]
                 main_df.loc[index, 'MUNICIPALITY'] = result[1]
@@ -241,14 +241,17 @@ def merge():
         main_df.to_excel(output_file_path, index=False)
         set_progress((total_files + 1) / work_progress * 100)
         
-        func.drop_row_with_one_cell(output_file_path)
-        set_progress((total_files + 2) / work_progress * 100)
+        # func.drop_row_with_one_cell(output_file_path)
+        # set_progress((total_files + 2) / work_progress * 100)
 
         func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
         set_progress((total_files + 3) / work_progress * 100)
+
+        func.highlight_n_check_prediction(output_file_path)
+        set_progress((total_files + 4) / work_progress * 100)
         
         func.auto_fit_columns(output_file_path)
-        set_progress((total_files + 4) / work_progress * 100)
+        set_progress((total_files + 5) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
