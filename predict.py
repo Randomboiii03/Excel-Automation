@@ -6,61 +6,79 @@ from openpyxl import load_workbook
 import functions as func
 from time import time
 import os
+from geocode import Geocode
 
-def load_model_predict(file_path):
-    try:
-        # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
-        # Load the model
-        model = joblib.load('source\\model.joblib')
 
-        # Assume `addresses.xlsx` contains a column 'address' with the addresses to predict
-        df_to_predict = pd.read_excel(file_path)
+class Predict():
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.model_path = 'source\\model.joblib'
+        self.result_path = 'uploads\\predictions.xlsx'
 
-        # Drop rows with NaN values in 'address'
-        df_to_predict.dropna(subset=['address'], inplace=True)
-        predictions = model.predict(df_to_predict['address'].astype(str))
+        self.model = joblib.load(self.model_path)
 
-        # Convert predictions to a list of tuples
-        area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
+    def with_machine_learning(self):
+        try:
+            wb = pd.read_excel(self.file_path)
+            existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
 
-        temp_df = pd.DataFrame()
+            addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
+            addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
 
-        temp_df['ADDRESS'] = df_to_predict['address']
+            prediction_mask = wb['ADDRESS'].isin(addresses)
+            print(f'Number of addresses to predict: {len(addresses)}')
 
-        # Adding predictions to the DataFrame
-        temp_df['AREA'], temp_df['MUNICIPALITY'] = zip(*area_munis)
-        temp_df['FINAL AREA'] = ''
-        temp_df['AUTOFIELD DATE'] = ''
+            if addresses:
+                predictions = self.model.predict(addresses) 
+            else:
+                predictions = []
 
-        if not os.path.exists('uploads'):
-            os.makedirs('uploads')
-        
-        result_path = f'uploads\\predictions.xlsx'
-
-        # Saving the predictions to a new Excel file
-        temp_df.to_excel(result_path, index=False)
-
-        func.highlight_n_check_prediction(result_path)
-        func.auto_fit_columns(result_path)
-
-        wb = load_workbook(result_path)
-        ws = wb.active
-
-        num_columns = ws.max_column
-
-        for row in ws.iter_rows(min_row=1, max_row=1):
-            last_cell = row[num_columns - 1]
-            ws.delete_cols(last_cell.column, 1)
-            ws.delete_cols(last_cell.column -1, 1)
-            break
+            print(f'Number of predictions: {len(predictions)}')  # Debugging line
             
-        wb.save(result_path)
+            area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
+            
+            wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
+            
+            wb.to_excel(self.file_path, index=False)
 
-        print("Predictions saved to 'predictions.xlsx'")
-    except Exception as e:
-        print(e)
-    
-    return result_path
+        except Exception as e:
+            print(e)
+            
+
+    def with_json(self):
+        wb = pd.read_excel(self.file_path)
+        existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
+
+        addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
+        addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
+
+        prediction_mask = wb['ADDRESS'].isin(addresses)
+        print(f'Number of addresses to predict: {len(addresses)}')
+
+        geocode = Geocode()
+        predictions = []
+        
+        for address in addresses:
+            result = geocode.search(str(address))
+
+            if result:
+                predictions.append(result)
+            else:
+                predictions.append(['', ''])
+
+        print(f"NOT FOUND: {geocode.count_not_found}")
+
+        wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*predictions)
+        wb.to_excel(self.file_path, index=False)
+
+
+    def main(self):
+        print('PREDICTING WITH JSON..')
+        self.with_json()
+
+        print('PREDICTING WITH ML..')
+        self.with_machine_learning()
+
 
 if __name__ == "__main__":
-    load_model_predict('source\\sample-address.xlsx')
+    Predict('WITHOUT AI.xlsx').main()

@@ -41,7 +41,6 @@ def train_model_save_joblib():
         # accuracy = accuracy_score(y_test, y_pred)
         # print(f"Model accuracy: {accuracy}")
         
-        # Saving the trained model to a joblib file
         joblib.dump(pipeline, './source/model.joblib')
         print("Model saved to 'model.joblib'")
 

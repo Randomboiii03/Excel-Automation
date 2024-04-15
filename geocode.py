@@ -49,11 +49,6 @@ class Geocode():
                 for municipality in self.area_muni_data[province]['MUNICIPALITIES']:
                     if self.check_address(municipality, orig_address):
                         return [province, municipality]
-                
-                # for barangay in self.area_muni_data[province]['BARANGAYS']:
-                #     for key, value in barangay.items():
-                #         if self.check_address(key, orig_address):
-                #             return [province, value]
 
         match_zipcode = self.search_zipcode(orig_address)
 
@@ -71,18 +66,6 @@ class Geocode():
             if self.check_address(municipality, orig_address):
                 if self.check_address(province, orig_address) or self.check_address(region, orig_address):
                     return [province, municipality]
-
-        # for data in self.muni_data:
-        #     province = data['PROVINCE']
-        #     municipality = data['MUNICIPALITY'].replace('C', 'K')
-            
-        #     if 'SEARCH' in data:
-        #         for search in data['SEARCH']:
-        #             if self.check_address(search.replace('C', 'K'), orig_address.replace('C', 'K')):
-        #                 return [province, municipality]
-
-        #     if self.check_address(f" {municipality} ", f" {orig_address.replace('C', 'K')} "):
-        #         return [province, municipality]
 
         self.count_not_found += 1
         return None

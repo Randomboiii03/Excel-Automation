@@ -9,14 +9,14 @@ from datetime import datetime
 from flask_socketio import SocketIO
 from time import sleep, time
 import functions as func
-# import joblib
-# from predict import load_model_predict
-# from train import train_model_save_joblib
+import joblib
+from predict import Predict
+from train import train_model_save_joblib
 import numpy as np
 from tqdm import tqdm
 import re
 import json
-from geocode import Geocode
+from database import DB as db
 
 
 app = Flask(__name__)
@@ -29,6 +29,7 @@ app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
+
 @app.route('/download_file')
 def download_file():
     # Path to the file you want to download
@@ -40,6 +41,8 @@ def download_file():
 @app.route('/feed', methods=['POST'])
 def feed():
     try:
+        db().create()
+
         file = request.files.get('file')  # Safely get file
 
         if not file:
@@ -59,7 +62,7 @@ def feed():
             return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
 
         inserted_data = db().insert(df)
-        print("INSERTED: ",0)
+        
         if inserted_data < 0:
             return jsonify({"message": "Something went wrong with database", "status": False}), 404
         
@@ -93,7 +96,13 @@ def upload():
     file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
     file.save(file_path)
 
+    if not os.path.exists(model):
+        return 'No model yet', 500
+
     try:
+        predict = Predict(file_path)
+        predict.with_json()
+        predict.with_machine_learning()
         result_path = load_model_predict(file_path)
         
         return send_file(result_path, as_attachment=True)
@@ -102,6 +111,7 @@ def upload():
     finally:
         if os.path.exists(file_path):
             os.remove(file_path)  # Clean up the uploaded file
+
 
 @app.route('/delete', methods=['POST'])
 def delete():
@@ -118,6 +128,7 @@ def delete():
         data_to_return = {'message': f"Error: {e}", 'status': False}
 
     return jsonify(data_to_return)
+
 
 @app.route('/merge', methods=['POST'])
 def merge():
@@ -226,32 +237,27 @@ def merge():
         output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
 
-        geocode = Geocode()
-        count = []
-        print('PREDICTING...')
-        for index, address in enumerate(main_df['ADDRESS']):
-            result = geocode.search(address)
-            
-            if result is not None:
-                main_df.loc[index, 'AREA'] = result[0]
-                main_df.loc[index, 'MUNICIPALITY'] = result[1]
-
-        print(f"NOT FOUND: {geocode.count_not_found}")
-
         main_df.to_excel(output_file_path, index=False)
-        set_progress((total_files + 1) / work_progress * 100)
-        
-        # func.drop_row_with_one_cell(output_file_path)
-        # set_progress((total_files + 2) / work_progress * 100)
 
-        func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
+        predict = Predict(output_file_path)
+
+        predict.with_json()
+        set_progress((total_files + 1) / work_progress * 100)
+
+        predict.with_machine_learning()
+        set_progress((total_files + 2) / work_progress * 100)
+        
+        func.drop_row_with_one_cell(output_file_path)
         set_progress((total_files + 3) / work_progress * 100)
 
-        func.highlight_n_check_prediction(output_file_path)
+        func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
         set_progress((total_files + 4) / work_progress * 100)
+
+        func.highlight_n_check_prediction(output_file_path)
+        set_progress((total_files + 5) / work_progress * 100)
         
         func.auto_fit_columns(output_file_path)
-        set_progress((total_files + 5) / work_progress * 100)
+        set_progress((total_files + 6) / work_progress * 100)
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
