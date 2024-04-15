@@ -100,10 +100,7 @@ def upload():
         return 'No model yet', 500
 
     try:
-        predict = Predict(file_path)
-        predict.with_json()
-        predict.with_machine_learning()
-        result_path = load_model_predict(file_path)
+        result_path = Predict(file_path, False).main()
         
         return send_file(result_path, as_attachment=True)
     except Exception as e:
@@ -170,7 +167,7 @@ def merge():
         }
 
         total_files = len(files)
-        work_progress = total_files + 5
+        work_progress = total_files + 6
         
         def set_progress(progress):
             socketio.emit("update progress", progress)
