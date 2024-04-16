@@ -107,18 +107,18 @@ class Predict():
             func.highlight_n_check_prediction(self.result_path)
             func.auto_fit_columns(self.result_path)
 
-            # wb = load_workbook(self.result_path)
-            # ws = wb.active
+            wb = load_workbook(self.result_path)
+            ws = wb.active
 
-            # num_columns = ws.max_column
+            num_columns = ws.max_column
 
-            # for row in ws.iter_rows(min_row=1, max_row=1):
-            #     last_cell = row[num_columns - 1]
-            #     ws.delete_cols(last_cell.column, 1)
-            #     ws.delete_cols(last_cell.column -1, 1)
-            #     break
+            for row in ws.iter_rows(min_row=1, max_row=1):
+                last_cell = row[num_columns - 1]
+                ws.delete_cols(last_cell.column, 1)
+                ws.delete_cols(last_cell.column -1, 1)
+                break
                 
-            # wb.save(self.result_path)
+            wb.save(self.result_path)
 
         except Exception as e:
             print(f"PREDICT ERROR: {e}")

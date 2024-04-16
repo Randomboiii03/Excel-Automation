@@ -106,8 +106,8 @@ def upload():
     try:
         result_path = predict.geocode_only(file_path)
 
-        # if os.path.exists(file_path):
-        #     os.remove(file_path)  # Clean up the uploaded file
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Clean up the uploaded file
 
         return send_file(result_path, as_attachment=True), 200
     except Exception as e:
