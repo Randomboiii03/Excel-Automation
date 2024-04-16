@@ -86,11 +86,15 @@ class Geocode():
                                     return [province, municipality]
 
         for region in self.geocode_data:
-            for municipality in self.geocode_data[region][province]:
-                if found_zipcode:
-                    zipcode = self.geocode_data[region][province][municipality]
-                    if found_zipcode == zipcode:
-                        return [province, municipality]
+            for province in self.geocode_data[region]:
+                for municipality in self.geocode_data[region][province]:
+                    if found_zipcode:
+                        zipcode = self.geocode_data[region][province][municipality]
+                        if found_zipcode == zipcode:
+                            if region == "NCR":
+                                return [region, province]
+                            else:
+                                return [province, municipality]
 
         self.count_not_found += 1
         return None
@@ -123,6 +127,6 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('LOT 18 BLK 12 CHARITO HEIGHTS SUBD Ph 4 BRGY GRANADA BACOLOD CITY NEGROS OCCIDENTAL 5701'))
+    print(Geocode().search('"TANDU BAS": "7502"'))
 
 

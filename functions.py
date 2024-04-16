@@ -96,15 +96,12 @@ def auto_fit_columns(excel_file_path):
     max_lengths = {}
 
     for col_idx, column_cells in enumerate(ws.columns, start=1):
-        # Calculate max length for each column and store it in the dictionary
         max_lengths[col_idx] = max(len(str(cell.value)) for cell in column_cells)
 
-    # Adjust column widths based on max lengths
     for col_idx, max_length in max_lengths.items():
         adjusted_width = (max_length + 2) * 1.1
         ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = adjusted_width
 
-    # Format header cells
     for cell in ws[1]:
         cell.fill = header_fill
         cell.font = header_font
@@ -116,7 +113,31 @@ def highlight_n_check_prediction(excel_file_path):
 
     def clean_address(address):
         address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
+
+        abbreviation = {
+            "GEN": "GENERAL",
+            "STA": "SANTA",
+            "STO": "SANTO",
+        }
+
+        for key, value in abbreviation.items():
+            address = [value if word == key else word for word in address]
+
         return ' '.join(list(filter(lambda item: item.strip(), address)))
+
+    def remove_numbers(address):
+        return re.sub(r"\d+", "", address)
+
+    def clean_province(province):
+        suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
+        
+        province_parts = province.split()
+        
+        cleaned_province_parts = [part.strip() for part in province_parts if part.upper() not in suffix]
+        
+        cleaned_province = " ".join(cleaned_province_parts)
+        
+        return cleaned_province
 
     def compare_address(str1, address, threshold=60):
         if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
@@ -150,10 +171,13 @@ def highlight_n_check_prediction(excel_file_path):
         else:
             cell3.value = cell4.value = ''
 
-            area = str(row["AREA"]).lower()
-            municipality = str(row["MUNICIPALITY"]).lower()
+            if not address or len(address) < 10:
+                cell1.fill = cell2.fill = PatternFill(start_color="EE4B2B", end_color="EE4B2B", fill_type="solid")
 
-            if compare_address(area, address) and compare_address(municipality, address):
+            area = clean_province(str(row["AREA"]).lower())
+            municipality = str(row["MUNICIPALITY"]).replace(' CITY', '').lower()
+
+            if (compare_address(area, address) and compare_address(municipality, address)):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
             elif compare_address(area, address):
                 cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
