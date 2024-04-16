@@ -111,6 +111,7 @@ def upload():
 
         return send_file(result_path, as_attachment=True), 200
     except Exception as e:
+        print(f'Error: {e}')
         return f'Error: {e}', 500
         
 

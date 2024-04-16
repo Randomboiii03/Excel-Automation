@@ -84,40 +84,44 @@ class Predict():
                 
 
     def geocode_only(self, file_path):
-        wb = pd.read_excel(file_path)
+        try:
+            wb = pd.read_excel(file_path)
 
-        wb.dropna(subset=['ADDRESS'], inplace=True)
-        addresses = wb['ADDRESS'].astype(str)
+            wb.dropna(subset=['ADDRESS'], inplace=True)
+            addresses = wb['ADDRESS'].astype(str)
 
-        predictions = self.with_json(addresses)
+            predictions = self.with_json(addresses)
 
-        temp_df = pd.DataFrame()
+            temp_df = pd.DataFrame()
 
-        temp_df['ADDRESS'] = wb['ADDRESS']
+            temp_df['ADDRESS'] = wb['ADDRESS']
 
-        temp_df['AREA'], temp_df['MUNICIPALITY'] = zip(*predictions)
-        temp_df['FINAL AREA'] = ''
-        temp_df['AUTOFIELD DATE'] = ''
+            temp_df['AREA'], temp_df['MUNICIPALITY'] = zip(*predictions)
+            temp_df['FINAL AREA'] = ''
+            temp_df['AUTOFIELD DATE'] = ''
 
-        temp_df.to_excel(self.result_path, index=False)
+            temp_df.to_excel(self.result_path, index=False)
 
-        self.with_machine_learning(self.result_path)
+            self.with_machine_learning(self.result_path)
 
-        func.highlight_n_check_prediction(self.result_path)
-        func.auto_fit_columns(self.result_path)
+            func.highlight_n_check_prediction(self.result_path)
+            func.auto_fit_columns(self.result_path)
 
-        wb = load_workbook(self.result_path)
-        ws = wb.active
+            # wb = load_workbook(self.result_path)
+            # ws = wb.active
 
-        num_columns = ws.max_column
+            # num_columns = ws.max_column
 
-        for row in ws.iter_rows(min_row=1, max_row=1):
-            last_cell = row[num_columns - 1]
-            ws.delete_cols(last_cell.column, 1)
-            ws.delete_cols(last_cell.column -1, 1)
-            break
-            
-        wb.save(self.result_path)
+            # for row in ws.iter_rows(min_row=1, max_row=1):
+            #     last_cell = row[num_columns - 1]
+            #     ws.delete_cols(last_cell.column, 1)
+            #     ws.delete_cols(last_cell.column -1, 1)
+            #     break
+                
+            # wb.save(self.result_path)
+
+        except Exception as e:
+            print(f"PREDICT ERROR: {e}")
 
         return self.result_path
         
