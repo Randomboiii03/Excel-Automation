@@ -10,16 +10,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 from database import DB as db
+import re
+
+def clean_address(address):
+    address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
+    return ' '.join(list(filter(lambda item: item.strip(), address)))
 
 def train_model_save_joblib():
     try:        
         print("Fetching data")
         area_munis, addresses = db().select()
-        print(area_munis, addresses)
-        # db().close()
+        
 
         if area_munis is None and addresses is None:
             return False
+
+        addresses = [clean_address(address) for address in addresses]
 
         print("Splitting...")
         # Splitting the data into training and test sets

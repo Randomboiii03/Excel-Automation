@@ -51,7 +51,7 @@
     <div class="flex justify-center items-center">
         <div class="card  p-5 rounded">
             <h1 class="text-md font-bold mb-5">Upload CSV/XLSX</h1>
-            <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data" class="space-y-5">
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-5">
                 <div class="form-group">
                     <div class="grid w-full max-w-xs items-center gap-1.5">
                         <label
@@ -60,7 +60,7 @@
                         <input type="file" id="fileInput" accept=".xlsx, .xls" class="form-control-file" name="file"
                             class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
                         <!-- Add SweetAlert loading screen here -->
-                        <button type="submit"
+                        <button type="submit" id="predictButton"
                             class="btn btn-primary bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mt-2 rounded" onclick="showLoading()">Upload</button>
                     </div>
                 </div>
@@ -83,12 +83,12 @@
                             FILE:</label>
                         <input type="file" accept=".xlsx, .xls" class="form-control-file" id="file" name="file"
                             class="h-10 w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-400" required>
-                        <button type="submit"
+                        <button type="submit" id="uploadButton"
                             class="btn btn-primary bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mt-2 rounded">Upload</button>
                     </div>
                     
                 </div>
-                <div id="message1" class="   text-black px-4 py-3 rounded relative" role="alert"
+                <div id="message1" class="text-black px-4 py-3 rounded relative" role="alert"
                     style="background-color: #f7dfc5; border: 1px solid #f3a553; color:#504f4f">
                     <strong class="font-bold text-xs">Download Template: </strong>
                     <span class="block sm:inline text-xs" style="white-space: pre-wrap"> <a href="/download_file" id="downloadLink" class="fas fa-download" style="cursor: pointer; color: #3677ee; "><span style="font-family: poppins; font-weight: normal; text-decoration-line: none;"> Template.xlsx</span></a></span>

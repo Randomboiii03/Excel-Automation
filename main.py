@@ -29,6 +29,7 @@ app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
+predict = Predict()
 
 @app.route('/download_file')
 def download_file():
@@ -96,19 +97,22 @@ def upload():
     file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
     file.save(file_path)
 
-    if not os.path.exists(model):
+    model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.joblib")
+    result_path = os.path.join(app.config['UPLOADED_FILES_DEST'], "predictions.xlsx")
+
+    if not os.path.exists(model_path):
         return 'No model yet', 500
 
     try:
-        result_path = Predict(file_path, False).main()
-        
-        return send_file(result_path, as_attachment=True)
+        result_path = predict.geocode_only(file_path)
+
+        # if os.path.exists(file_path):
+        #     os.remove(file_path)  # Clean up the uploaded file
+
+        return send_file(result_path, as_attachment=True), 200
     except Exception as e:
         return f'Error: {e}', 500
-    finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)  # Clean up the uploaded file
-
+        
 
 @app.route('/delete', methods=['POST'])
 def delete():

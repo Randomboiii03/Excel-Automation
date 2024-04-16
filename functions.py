@@ -71,6 +71,7 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
             column_index = df.columns.get_loc(header) + 1
             cell = sheet.cell(row=row_index + 2, column=column_index)
             cell_value = process_column(header, row)
+
             if cell_value is None:
                 cell.fill = PatternFill(start_color="FFD3D3", end_color="FFD3D3", fill_type="solid")
             else:
@@ -113,12 +114,17 @@ def auto_fit_columns(excel_file_path):
 
 def highlight_n_check_prediction(excel_file_path):
 
+    def clean_address(address):
+        address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
+        return ' '.join(list(filter(lambda item: item.strip(), address)))
+
     def compare_address(str1, address, threshold=60):
         if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
             return False
 
-        similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
-        return similarity_ratio <= threshold
+        # similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
+        # return similarity_ratio <= threshold
+        return True
     
     df = pd.read_excel(excel_file_path)
     area_index = df.columns.get_loc('AREA') + 1
@@ -132,19 +138,14 @@ def highlight_n_check_prediction(excel_file_path):
     pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
 
     for row_index, row in df.iterrows():
-        address = str(row['ADDRESS']).lower()
+        address = clean_address(str(row['ADDRESS'])).lower()
 
         cell1 = sheet.cell(row=row_index + 2, column=area_index)
         cell2 = sheet.cell(row=row_index + 2, column=municipality_index)
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
 
-        # cell3.value = cell4.value = ''
-
-        # if cell1.value is None and cell2.value is None:
-        #     cell1.fill = cell2.fill = pattern_fill
-
-        if not address.strip():
+        if not address or len(address) <= 10:
             cell1.value = cell2.value = ''
         else:
             cell3.value = cell4.value = ''

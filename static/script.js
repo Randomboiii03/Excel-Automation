@@ -6,6 +6,7 @@ window.onload = function () {
   const progressBar = document.getElementById("progressBar");
   const progressText = document.getElementById("progressText");
   const mergeButton = document.getElementById("mergeButton");
+  const predictButton = document.getElementById("predictButton");
   const progressContainer = document.getElementById("progress");
   const messageContainer = document.getElementById("message");
   const messageStatus = document.getElementById("messageStatus");
@@ -300,7 +301,6 @@ function promptForPassword(formToShow) {
 }
 
 
-
 document.addEventListener("DOMContentLoaded", function () {
   const navbarToggle = document.getElementById("navbar-toggle");
   const navbar = document.querySelector(".navbar");
@@ -316,51 +316,110 @@ document.addEventListener("DOMContentLoaded", function () {
   const uploadForm = document.getElementById("uploadForm");
   const fileInput = document.getElementById("fileInput");
 
-  uploadForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
+  function uploadFile() {
+    // Get the file input element
+    const fileInput = document.getElementById('fileInput');
+    // Get the file object
     const file = fileInput.files[0];
 
+    // Create a FormData object to send the file
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
-    // Loading
-
-    try {
-      const response = await fetch("/predict", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.text();
-
-      // Handle successful upload response
-      console.log(data);
-      // Trigger Sweet Alert notification
-      Swal.fire({
-        icon: 'success',
-        title: 'File processing completed',
-        timer: 5000, // Adjust as needed
-        timerProgressBar: true,
-        toast: true,
-        position: 'center',
-        showConfirmButton: false,
-        customClass: {
-          popup: 'toast-custom-class',
-          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+    // Make the POST request
+    fetch('/predict', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-      });
-    } catch (error) {
-      // Handle errors
-      console.error("There was an error with the upload:", error);
-      // Optionally, trigger an error Sweet Alert notification
-     
-    }
-  });
+        return response.blob(); // assuming the server returns a file
+    })
+    .then(blob => {
+        // Create a temporary URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        // Create a link element to trigger the download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'predictions.xlsx'; // specify the filename
+        // Append the link to the document and trigger the click event
+        document.body.appendChild(a);
+        a.click();
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'File processing completed',
+          timer: 5000, // Adjust as needed
+          timerProgressBar: true,
+          toast: true,
+          position: 'center',
+          showConfirmButton: false,
+          customClass: {
+            popup: 'toast-custom-class',
+            backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+          }
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Handle error, e.g., show an alert
+        alert('Error occurred while uploading file');
+    });
+}
+
+// Add event listener to the form submission
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
+    uploadFile(); // Call the uploadFile function
+});
+
+  // uploadForm.addEventListener("submit", async (event) => {
+  //   event.preventDefault();
+
+  //   const file = fileInput.files[0];
+
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+
+  //   // Loading
+
+  //   // const response = await fetch("/predict", {
+  //   //   method: "POST",
+  //   //   body: formData,
+  //   // });
+
+  //   // const data = await response.text();
+
+  //   // // Handle successful upload response
+  //   // console.log(data);
+  //   // // Trigger Sweet Alert notification
+    // Swal.fire({
+    //   icon: 'success',
+    //   title: 'File processing completed',
+    //   timer: 5000, // Adjust as needed
+    //   timerProgressBar: true,
+    //   toast: true,
+    //   position: 'center',
+    //   showConfirmButton: false,
+    //   customClass: {
+    //     popup: 'toast-custom-class',
+    //     backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+    //   }
+    // });
+
+  //   // try {
+      
+  //   // } catch (error) {
+  //   //   // Handle errors
+  //   //   console.error("There was an error with the upload:", error);
+  //   //   // Optionally, trigger an error Sweet Alert notification
+  //   // }
+  // });
 });
 
 document.addEventListener("DOMContentLoaded", () => {
