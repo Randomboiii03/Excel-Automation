@@ -41,14 +41,14 @@ class Geocode():
 
                 if self.check_address(province, orig_address) or self.check_address("MANILA", orig_address):
                     for municipality in self.geocode_data[region]:
+                        for submuni in self.geocode_data[region][municipality]:
+                            if self.check_address(submuni, orig_address):
+                                return [province, municipality]
+
                         if self.check_address(municipality.replace(' CITY', ''), orig_address):
                             return [province, municipality]
 
                 for municipality in self.geocode_data[region]:
-                    for submuni in self.geocode_data[region][municipality]:
-                        if self.check_address(submuni, orig_address):
-                            return [province, municipality]
-
                     if self.check_address(municipality, orig_address):
                         return [province, municipality]
 
@@ -106,6 +106,6 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('01 NARRA STREET NORTH SIGNAL VILLAGE METRO MANILA PHILIPPINES'))
+    print(Geocode().search('549 FERNANDINO ST SAN NICOLAS CITY OF SAN FERNANDO PAMPANGA PHILIPPINES'))
 
 

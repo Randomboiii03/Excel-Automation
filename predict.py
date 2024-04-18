@@ -81,6 +81,8 @@ class Predict():
 
         wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*predictions)
         wb.to_excel(file_path, index=False)
+
+        self.with_machine_learning(file_path)
                 
 
     def geocode_only(self, file_path):

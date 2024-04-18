@@ -29,8 +29,6 @@ app.config['SOURCE_FILES_DEST'] = os.getenv('SOURCE_FOLDER', 'source')
 files = UploadSet('files', DATA)
 configure_uploads(app, files)
 
-predict = Predict()
-
 @app.route('/download_file')
 def download_file():
     # Path to the file you want to download
@@ -41,6 +39,8 @@ def download_file():
 
 @app.route('/feed', methods=['POST'])
 def feed():
+    file_path = ''
+
     try:
         db().create()
 
@@ -104,6 +104,7 @@ def upload():
         return 'No model yet', 500
 
     try:
+        predict = Predict()
         result_path = predict.geocode_only(file_path)
 
         if os.path.exists(file_path):
@@ -241,12 +242,8 @@ def merge():
 
         main_df.to_excel(output_file_path, index=False)
 
-        predict = Predict(output_file_path)
-
-        predict.with_json()
+        predict = Predict().merge_it(output_file_path)
         set_progress((total_files + 1) / work_progress * 100)
-
-        predict.with_machine_learning()
         set_progress((total_files + 2) / work_progress * 100)
         
         func.drop_row_with_one_cell(output_file_path)
