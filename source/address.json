@@ -688,7 +688,6 @@
       "BALAGTAS": "3016",
       "BALIUAG": "3006",
       "BOCAUE": "3018",
-      "BULACAN": "3017",
       "BUSTOS": "3007",
       "CALUMPIT": "3003",
       "CRUZ NA DAAN": "3025",
@@ -709,7 +708,8 @@
       "SAN MIGUEL": "3011",
       "SAN RAFAEL": "3008",
       "SAPANG PALAY": "3024",
-      "SANTA MARIA": "3022"
+      "SANTA MARIA": "3022",
+      "BULACAN": "3017"
     },
     "NUEVA ECIJA": {
       "ALIAGA": "3111",
@@ -794,8 +794,8 @@
       "SAN MANUEL": "2309",
       "SAN MIGUEL": "2301",
       "SANTA IGNACIA": "2303",
-      "TARLAC": "2300",
-      "VICTORIA": "2313"
+      "VICTORIA": "2313",
+      "TARLAC": "2300"
     },
     "ZAMBALES": {
       "BOTOLAN": "2202",
@@ -951,7 +951,6 @@
       "PITOGO": "4308",
       "PLARIDEL": "4306",
       "POLILIO": "4339",
-      "QUEZON": "4332",
       "QUEZON CAPITOL": "4300",
       "REAL": "4335",
       "SAMPALOC": "4329",
@@ -963,7 +962,8 @@
       "TAGKAWAYAN": "4321",
       "TAYABAS": "4327",
       "TIAONG": "4325",
-      "UNISAN": "4305"
+      "UNISAN": "4305",
+      "QUEZON": "4332"
     },
     "RIZAL": {
       "ANGONO": "1930",
@@ -1073,12 +1073,12 @@
       "LOOC": "5507",
       "MAGDIWANG": "5511",
       "ODIONGAN": "5505",
-      "ROMBLON": "5500",
       "SAN AGUSTIN": "5501",
       "SAN ANDRES": "5504",
       "SAN FERNANDO": "5513",
       "SAN JOSE": "5510",
-      "SANTA FE": "5508"
+      "SANTA FE": "5508",
+      "ROMBLON": "5500"
     }
   },
   "BICOL": {
@@ -1184,7 +1184,6 @@
       "DIMASALANG": "5403",
       "ESPERANZA": "5407",
       "MANDAON": "5411",
-      "MASBATE": "5400",
       "MILAGROS": "5410",
       "MOBO": "5401",
       "MONREAL": "5418",
@@ -1194,7 +1193,8 @@
       "SAN FERNANDO": "5416",
       "SAN JACINTO": "5417",
       "SAN PASCUAL": "5420",
-      "USON": "5402"
+      "USON": "5402",
+      "MASBATE": "5400"
     },
     "SORSOGON": {
       "BACON": "4701",
@@ -1211,8 +1211,8 @@
       "MATNOG": "4708",
       "PILAR": "4714",
       "PRIETO DIAZ": "4711",
-      "SORSOGON": "4700",
-      "SANTA MAGDALENA": "4709"
+      "SANTA MAGDALENA": "4709",
+      "SORSOGON": "4700"
     }
   },
   "CAR": {
@@ -1611,13 +1611,13 @@
   "EASTERN VISAYAS": {
     "BILIRAN": {
       "ALMERIA": "6544",
-      "BILIRAN": "6549",
       "CABUCGAYAN": "6550",
       "CAIBIRAN": "6548",
       "CULABA": "6547",
       "KAWAYAN": "6545",
       "MARIPIPI": "6546",
-      "NAVAL": "6543"
+      "NAVAL": "6543",
+      "BILIRAN": "6549"
     },
     "EASTERN SAMAR": {
       "ARTECHE": "6822",
@@ -1643,52 +1643,6 @@
       "SAN POLICARPIO": "6821",
       "SULAT": "6815",
       "TAFT": "6816"
-    },
-    "LEYTE": {
-      "ABUYOG": "6510",
-      "ALANGALANG": "6517",
-      "ALBUERA": "6542",
-      "BABATNGON": "6520",
-      "BURAUEN": "6516",
-      "BARUGO": "6519",
-      "BATO": "6525",
-      "BAYBAY": "6521",
-      "CALUBIAN": "6534",
-      "CAPOOCAN": "6530",
-      "CARIGARA": "6529",
-      "DAGAMI": "6515",
-      "DULAG": "6505",
-      "HILONGOS": "6524",
-      "HINDANG": "6523",
-      "INOPACAN": "6522",
-      "ISABEL": "6539",
-      "JARO": "6527",
-      "JAVIER": "6511",
-      "BUGHO": "6511",
-      "JULITA": "6506",
-      "KANANGA": "6531",
-      "LA PAZ": "6508",
-      "LEYTE": "6533",
-      "MACARTHUR": "6509",
-      "MAHAPLAG": "6512",
-      "MATAG OB": "6532",
-      "MATALOM": "6526",
-      "MAYORGA": "6507",
-      "MERIDA": "6540",
-      "ORMOC CITY": "6541",
-      "PALO": "6501",
-      "PALOMPON": "6538",
-      "PASTRANA": "6514",
-      "SAN ISIDRO": "6535",
-      "SAN MIGUEL": "6518",
-      "SANTA FE": "6513",
-      "TABANGO": "6536",
-      "TABONTABON": "6504",
-      "TACLOBAN CITY": "6500",
-      "TANAUAN": "6502",
-      "TOLOSA": "6503",
-      "TUNGA": "6528",
-      "VILLABA": "6537"
     },
     "NORTHERN SAMAR": {
       "ALLEN": "6405",
@@ -1765,6 +1719,52 @@
       "VILLAREAL": "6717",
       "WRIGHT": "6703",
       "ZUMARRAGA": "6725"
+    },
+    "LEYTE": {
+      "ABUYOG": "6510",
+      "ALANGALANG": "6517",
+      "ALBUERA": "6542",
+      "BABATNGON": "6520",
+      "BURAUEN": "6516",
+      "BARUGO": "6519",
+      "BATO": "6525",
+      "BAYBAY": "6521",
+      "CALUBIAN": "6534",
+      "CAPOOCAN": "6530",
+      "CARIGARA": "6529",
+      "DAGAMI": "6515",
+      "DULAG": "6505",
+      "HILONGOS": "6524",
+      "HINDANG": "6523",
+      "INOPACAN": "6522",
+      "ISABEL": "6539",
+      "JARO": "6527",
+      "JAVIER": "6511",
+      "BUGHO": "6511",
+      "JULITA": "6506",
+      "KANANGA": "6531",
+      "LA PAZ": "6508",
+      "MACARTHUR": "6509",
+      "MAHAPLAG": "6512",
+      "MATAG OB": "6532",
+      "MATALOM": "6526",
+      "MAYORGA": "6507",
+      "MERIDA": "6540",
+      "ORMOC CITY": "6541",
+      "PALO": "6501",
+      "PALOMPON": "6538",
+      "PASTRANA": "6514",
+      "SAN ISIDRO": "6535",
+      "SAN MIGUEL": "6518",
+      "SANTA FE": "6513",
+      "TABANGO": "6536",
+      "TABONTABON": "6504",
+      "TACLOBAN CITY": "6500",
+      "TANAUAN": "6502",
+      "TOLOSA": "6503",
+      "TUNGA": "6528",
+      "VILLABA": "6537",
+      "LEYTE": "6533"
     }
   },
   "ZAMBOANGA PENINSULA": {
@@ -2152,12 +2152,12 @@
       "BASILISA": "8413",
       "RIZAL": "8413",
       "CAGDIANAO": "8411",
-      "DINAGAT": "8412",
       "LIBJO": "8414",
       "ALBOR": "8414",
       "LORETO": "8415",
       "SAN JOSE": "8427",
-      "TUBAJON": "8426"
+      "TUBAJON": "8426",
+      "DINAGAT": "8412"
     },
     "SURIGAO DEL SUR": {
       "BAROBO": "8309",
