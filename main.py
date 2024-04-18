@@ -62,7 +62,7 @@ def feed():
         if list(df.columns) != ['area-muni','address']:
             return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
 
-        inserted_data = db().insert(df)
+        inserted_data = db().insert(df.drop_duplicates())
         
         if inserted_data < 0:
             return jsonify({"message": "Something went wrong with database", "status": False}), 404

@@ -2,45 +2,17 @@ import pandas as pd
 from tqdm import tqdm
 import re
 import json
+import functions as func
 
 class Geocode():
     def __init__(self):
         with open('source/address.json', 'r') as json_file:
             self.geocode_data = json.load(json_file)
 
-        self.df = pd.read_excel('WITHOUT AI.xlsx', usecols=['ADDRESS'])
+        self.df = pd.read_excel('addresses.xlsx', usecols=['ADDRESS'])
         self.area_munis = [''] * len(self.df)
 
         self.count_not_found = 0
-
-    def clean_address(self, address):
-        address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
-
-        abbreviation = {
-            "GEN": "GENERAL",
-            "STA": "SANTA",
-            "STO": "SANTO",
-        }
-
-        for key, value in abbreviation.items():
-            address = [value if word == key else word for word in address]
-
-        return ' '.join(list(filter(lambda item: item.strip(), address)))
-
-    def remove_numbers(self, address):
-        return re.sub(r"\d+", "", address)
-
-
-    def clean_province(self, province):
-        suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
-        
-        province_parts = province.split()
-        
-        cleaned_province_parts = [part.strip() for part in province_parts if part.upper() not in suffix]
-        
-        cleaned_province = " ".join(cleaned_province_parts)
-        
-        return cleaned_province
 
 
     def check_address(self, place, search_term):
@@ -58,11 +30,14 @@ class Geocode():
 
     def check_in_data(self, orig_address):
         found_zipcode = self.search_zipcode(orig_address)
-        orig_address = self.remove_numbers(orig_address)
+        orig_address = func.remove_numbers(orig_address)
+        print(orig_address)
         
         for region in self.geocode_data:
             if region == 'NCR':
                 province = region
+
+                orig_address = orig_address.replace('METRO MANILA', 'NCR').replace('MANILA', 'NCR')
 
                 if self.check_address(province, orig_address) or self.check_address("MANILA", orig_address):
                     for municipality in self.geocode_data[region]:
@@ -70,14 +45,18 @@ class Geocode():
                             return [province, municipality]
 
                 for municipality in self.geocode_data[region]:
+                    for submuni in self.geocode_data[region][municipality]:
+                        if self.check_address(submuni, orig_address):
+                            return [province, municipality]
+
                     if self.check_address(municipality, orig_address):
                         return [province, municipality]
 
             else:
                 for province in self.geocode_data[region]:
-                    if self.check_address(self.clean_province(province), orig_address):
+                    if self.check_address(func.clean_province(province), orig_address):
                         for municipality in self.geocode_data[region][province]:
-                            if self.check_address(municipality.replace(' CITY', ''), orig_address):
+                            if self.check_address(municipality, orig_address):
                                 return [province, municipality]
 
                             if found_zipcode:
@@ -101,7 +80,7 @@ class Geocode():
 
 
     def search(self, orig_address):
-        result = self.check_in_data(self.clean_address(orig_address).upper())
+        result = self.check_in_data(func.clean_address(orig_address).upper())
 
         if result: 
             return result
@@ -112,7 +91,7 @@ class Geocode():
     def main(self):
         with tqdm(total=len(self.df['ADDRESS'])) as pbr:
             for index, orig_address in enumerate(self.df['ADDRESS']):
-                result = self.check_in_data(self.clean_address(orig_address).upper())
+                result = self.check_in_data(func.clean_address(orig_address).upper())
 
                 if result: 
                     self.area_munis[index] = f"{result[0]}-{result[1]}"
@@ -127,6 +106,6 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('"TANDU BAS": "7502"'))
+    print(Geocode().search('01 NARRA STREET NORTH SIGNAL VILLAGE METRO MANILA PHILIPPINES'))
 
 

@@ -109,45 +109,45 @@ def auto_fit_columns(excel_file_path):
                     
     wb.save(excel_file_path)
 
-def highlight_n_check_prediction(excel_file_path):
+def clean_address(address):
+    address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).replace("CITY", " CITY ").split()
 
-    def clean_address(address):
-        address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).split()
+    abbreviation = {
+        "GEN": "GENERAL",
+        "STA": "SANTA",
+        "STO": "SANTO",
+    }
 
-        abbreviation = {
-            "GEN": "GENERAL",
-            "STA": "SANTA",
-            "STO": "SANTO",
-        }
+    for key, value in abbreviation.items():
+        address = [value if word == key else word for word in address]
 
-        for key, value in abbreviation.items():
-            address = [value if word == key else word for word in address]
+    return ' '.join(list(filter(lambda item: item.strip(), address)))
 
-        return ' '.join(list(filter(lambda item: item.strip(), address)))
+def remove_numbers(address):
+    return re.sub(r"\d+", "", address)
 
-    def remove_numbers(address):
-        return re.sub(r"\d+", "", address)
-
-    def clean_province(province):
-        suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
+def clean_province(province):
+    suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
         
-        province_parts = province.split()
+    province_parts = province.split()
         
-        cleaned_province_parts = [part.strip() for part in province_parts if part.upper() not in suffix]
+    cleaned_province_parts = [part.strip() for part in province_parts if part.upper() not in suffix]
         
-        cleaned_province = " ".join(cleaned_province_parts)
+    cleaned_province = " ".join(cleaned_province_parts)
         
-        return cleaned_province
+    return cleaned_province
 
-    def compare_address(str1, address, threshold=60):
-        if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
-            return False
+def compare_address(str1, address, threshold=60):
+    if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
+        return False
 
-        # similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
-        # return similarity_ratio <= threshold
-        return True
-    
+    # similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
+    # return similarity_ratio <= threshold
+    return True
+
+def highlight_n_check_prediction(excel_file_path):    
     df = pd.read_excel(excel_file_path)
+
     area_index = df.columns.get_loc('AREA') + 1
     municipality_index = df.columns.get_loc('MUNICIPALITY') + 1
     final_area_index = df.columns.get_loc('FINAL AREA') + 1
@@ -166,16 +166,14 @@ def highlight_n_check_prediction(excel_file_path):
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
 
-        if not address or len(address) <= 10:
+        if not address or len(address) <= 20:
             cell1.value = cell2.value = ''
+            cell1.fill = cell2.fill = PatternFill(start_color="EE4B2B", end_color="EE4B2B", fill_type="solid")
         else:
             cell3.value = cell4.value = ''
 
-            if not address or len(address) < 10:
-                cell1.fill = cell2.fill = PatternFill(start_color="EE4B2B", end_color="EE4B2B", fill_type="solid")
-
             area = clean_province(str(row["AREA"]).lower())
-            municipality = str(row["MUNICIPALITY"]).replace(' CITY', '').lower()
+            municipality = str(row["MUNICIPALITY"]).lower()
 
             if (compare_address(area, address) and compare_address(municipality, address)):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")

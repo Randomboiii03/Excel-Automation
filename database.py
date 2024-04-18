@@ -35,10 +35,13 @@ class DB:
     def select(self):
         try:
             self.cur.execute("SELECT area_muni, address FROM model")
+
             rows = self.cur.fetchall()
             area_munis = [row[0] for row in rows]
             addresses = [row[1] for row in rows]
+            
             return area_munis, addresses
+
         except psycopg2.Error as e:
             print("Error selecting data:", e)
             return None, None
