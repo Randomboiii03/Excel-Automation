@@ -59,11 +59,6 @@ class Geocode():
                             if self.check_address(municipality, orig_address):
                                 return [province, municipality]
 
-                            if found_zipcode:
-                                zipcode = self.geocode_data[region][province][municipality]
-                                if found_zipcode == zipcode:
-                                    return [province, municipality]
-
         for region in self.geocode_data:
             for province in self.geocode_data[region]:
                 for municipality in self.geocode_data[region][province]:
@@ -106,6 +101,6 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('549 FERNANDINO ST SAN NICOLAS CITY OF SAN FERNANDO PAMPANGA PHILIPPINES'))
+    print(Geocode().search('0 PUSOK, PUSOK, LAPU LAPU CITY, CEBU 6001'))
 
 
