@@ -81,7 +81,7 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
 
 def drop_row_with_one_cell(excel_file_path):
     excel_data = pd.read_excel(excel_file_path)
-    excel_data = excel_data[excel_data.count(axis=1) > 1]
+    excel_data = excel_data[excel_data.count(axis=1) > 1]   
     excel_data.to_excel(excel_file_path, index=False)
 
 def auto_fit_columns(excel_file_path):

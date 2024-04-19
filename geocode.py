@@ -37,16 +37,17 @@ class Geocode():
             if region == 'NCR':
                 province = region
 
-                orig_address = orig_address.replace('METRO MANILA', 'NCR').replace('MANILA', 'NCR')
+                orig_address = orig_address.replace('METRO MANILA', 'NCR')
 
-                if self.check_address(province, orig_address) or self.check_address("MANILA", orig_address):
+                if self.check_address(province, orig_address):
+                    for municipality in self.geocode_data[region]:
+                        if self.check_address(municipality.replace(' CITY', ''), orig_address):
+                            return [province, municipality]
+                    
                     for municipality in self.geocode_data[region]:
                         for submuni in self.geocode_data[region][municipality]:
                             if self.check_address(submuni, orig_address):
                                 return [province, municipality]
-
-                        if self.check_address(municipality.replace(' CITY', ''), orig_address):
-                            return [province, municipality]
 
                 for municipality in self.geocode_data[region]:
                     if self.check_address(municipality, orig_address):
@@ -101,6 +102,6 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('0 PUSOK, PUSOK, LAPU LAPU CITY, CEBU 6001'))
+    print(Geocode().search('764 PUSO STREET COLOONG 1 VALENZUELA CITY NCR PHILIPPINES'))
 
 
