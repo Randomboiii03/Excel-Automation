@@ -138,7 +138,7 @@ def clean_province(province):
     return cleaned_province
 
 def compare_address(str1, address, threshold=60):
-    if str1.replace(' ', '').replace('ñ', 'n').lower() in address.replace(' ', '').replace('ñ', 'n').lower():
+    if str1.replace(' ', '').replace('Ñ', 'N') in address.replace(' ', '').replace('ñ', 'n').replace('Ñ', 'N'):
         return False
 
     # similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
@@ -159,33 +159,29 @@ def highlight_n_check_prediction(excel_file_path):
     pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
 
     for row_index, row in df.iterrows():
-        address = clean_address(str(row['ADDRESS'])).lower()
+        address = clean_address(str(row['ADDRESS']))
 
         cell1 = sheet.cell(row=row_index + 2, column=area_index)
         cell2 = sheet.cell(row=row_index + 2, column=municipality_index)
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
 
+        cell3.value = cell4.value = ''
+
         if not address or len(address) <= 15:
             cell1.value = cell2.value = ''
-            cell1.fill = cell2.fill = PatternFill(start_color="EE4B2B", end_color="EE4B2B", fill_type="solid")
+            cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
         else:
-            cell3.value = cell4.value = ''
-
-            area = clean_province(str(row["AREA"]).lower())
-            municipality = str(row["MUNICIPALITY"]).lower()
-
-            bold_font = Font(bold=True)
+            area = clean_province(str(row["AREA"]))
+            municipality = str(row["MUNICIPALITY"])
 
             if '**' in area and '**' in municipality:
-                cell1.font = cell2.font = bold_font
-                area = area.replace('**', '')
-                municipality = municipality.replace('**', '')
-                cell1.value = area.upper()
-                cell2.value = municipality.upper()
+                cell1.font = cell2.font = Font(bold=True)
+                cell1.value = area.replace('**', '')
+                cell2.value = municipality.replace('**', '')
 
             if (compare_address(area, address) and compare_address(municipality, address)):
-                cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+                cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="#ffa200", fill_type="solid")
             elif compare_address(area, address):
                 cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
             elif compare_address(municipality, address):
