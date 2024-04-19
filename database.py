@@ -20,7 +20,7 @@ class DB:
             count = 0
             
             for _, row in df.iterrows():
-                print(row)
+                # print(row)
                 if (row['area-muni'] not in area_munis and row['address'] not in addresses):
                     query = "INSERT INTO model (area_muni, address) VALUES (%s, %s) ON CONFLICT DO NOTHING"
                     self.cur.execute(query, (row['area-muni'], row['address']))
