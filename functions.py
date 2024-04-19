@@ -166,7 +166,7 @@ def highlight_n_check_prediction(excel_file_path):
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
 
-        if not address or len(address) <= 20:
+        if not address or len(address) <= 15:
             cell1.value = cell2.value = ''
             cell1.fill = cell2.fill = PatternFill(start_color="EE4B2B", end_color="EE4B2B", fill_type="solid")
         else:
@@ -177,10 +177,12 @@ def highlight_n_check_prediction(excel_file_path):
 
             bold_font = Font(bold=True)
 
-            if '**' in cell1.value and '**' in cell2.value:
+            if '**' in area and '**' in municipality:
                 cell1.font = cell2.font = bold_font
-                cell1.value = cell1.value.replace('**', '')
-                cell2.value = cell2.value.replace('**', '')
+                area = area.replace('**', '')
+                municipality = municipality.replace('**', '')
+                cell1.value = area
+                cell2.value = municipality
 
             if (compare_address(area, address) and compare_address(municipality, address)):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
