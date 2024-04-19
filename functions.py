@@ -115,16 +115,16 @@ def clean_address(address):
     abbreviation = {
         "GEN": "GENERAL",
         "STA": "SANTA",
-        "STO": "SANTO",
+        "STO": "SANTO"
     }
-
+    
     for key, value in abbreviation.items():
         address = [value if word == key else word for word in address]
-
-    return ' '.join(list(filter(lambda item: item.strip(), address)))
+        
+    return ' '.join(list(filter(lambda item: item.strip(), address))).replace('METRO MANILA', 'NCR')
 
 def remove_numbers(address):
-    return re.sub(r"\d+", "", address)
+    return clean_address(re.sub(r"\d+", "", address))
 
 def clean_province(province):
     suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
@@ -174,6 +174,13 @@ def highlight_n_check_prediction(excel_file_path):
 
             area = clean_province(str(row["AREA"]).lower())
             municipality = str(row["MUNICIPALITY"]).lower()
+
+            bold_font = Font(bold=True)
+
+            if '**' in cell1.value and '**' in cell2.value:
+                cell1.font = cell2.font = bold_font
+                cell1.value = cell1.value.replace('**', '')
+                cell2.value = cell2.value.replace('**', '')
 
             if (compare_address(area, address) and compare_address(municipality, address)):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")

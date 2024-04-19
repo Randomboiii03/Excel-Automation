@@ -3,6 +3,7 @@ from tqdm import tqdm
 import re
 import json
 import functions as func
+import sys
 
 class Geocode():
     def __init__(self):
@@ -31,13 +32,10 @@ class Geocode():
     def check_in_data(self, orig_address):
         found_zipcode = self.search_zipcode(orig_address)
         orig_address = func.remove_numbers(orig_address)
-        print(orig_address)
         
         for region in self.geocode_data:
             if region == 'NCR':
                 province = region
-
-                orig_address = orig_address.replace('METRO MANILA', 'NCR')
 
                 if self.check_address(province, orig_address):
                     for municipality in self.geocode_data[region]:
@@ -49,9 +47,9 @@ class Geocode():
                             if self.check_address(submuni, orig_address):
                                 return [province, municipality]
 
-                for municipality in self.geocode_data[region]:
-                    if self.check_address(municipality, orig_address):
-                        return [province, municipality]
+                # for municipality in self.geocode_data[region]:
+                #     if self.check_address(municipality, orig_address):
+                #         return [province, municipality]
 
             else:
                 for province in self.geocode_data[region]:
@@ -102,6 +100,11 @@ class Geocode():
 
 if __name__ == '__main__':
     # Geocode().main()
-    print(Geocode().search('764 PUSO STREET COLOONG 1 VALENZUELA CITY NCR PHILIPPINES'))
+    if len(sys.argv) != 2:
+        print("Usage: python geocode.py <address>")
+        sys.exit(1)
+
+    address = sys.argv[1]
+    print(Geocode().search(address))
 
 

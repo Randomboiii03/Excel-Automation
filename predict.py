@@ -7,6 +7,7 @@ import functions as func
 from time import time
 import os
 from geocode import Geocode
+import sys
 
 
 class Predict():
@@ -39,9 +40,9 @@ class Predict():
                 print(f'Number of predictions: {len(predictions)}')  # Debugging line
 
                 area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
-                
-                wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
-                
+                area_munis_bold = [(f'**{area}', f'**{municipality}') for area, municipality in area_munis]
+                    
+                wb.loc[~existing_mask & wb['ADDRESS'].notna(), ['AREA', 'MUNICIPALITY']] = area_munis_bold
                 wb.to_excel(file_path, index=False)
 
         except Exception as e:
@@ -128,6 +129,10 @@ class Predict():
         return self.result_path
         
 if __name__ == "__main__":
-    # Predict('WITHOUT AI.xlsx', False).main()
-    pass
+    if len(sys.argv) != 2:
+        print("Usage: python geocode.py <file_path>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
+    print(Predict().geocode_only(file_path))
 
