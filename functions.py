@@ -181,8 +181,8 @@ def highlight_n_check_prediction(excel_file_path):
                 cell1.font = cell2.font = bold_font
                 area = area.replace('**', '')
                 municipality = municipality.replace('**', '')
-                cell1.value = area
-                cell2.value = municipality
+                cell1.value = area.upper()
+                cell2.value = municipality.upper()
 
             if (compare_address(area, address) and compare_address(municipality, address)):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
