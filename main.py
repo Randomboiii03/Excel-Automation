@@ -59,7 +59,7 @@ def feed():
 
         df = pd.read_excel(file_path)
 
-        if list(df.columns) != ['area-muni','address'] or list(df.columns) != ['address', 'area-muni']:
+        if 'area-muni' not in list(df.columns) and 'address' not in list(df.columns):
             return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
 
         inserted_data = db().insert(df.drop_duplicates())
