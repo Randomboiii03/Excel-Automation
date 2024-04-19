@@ -59,7 +59,7 @@ def feed():
 
         df = pd.read_excel(file_path)
 
-        if list(df.columns) != ['area-muni','address'] or list(df.columns) != ['address', 'area-muni']:
+        if 'area-muni' not in list(df.columns) and 'address' not in list(df.columns):
             return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
 
         inserted_data = db().insert(df.drop_duplicates())
@@ -173,7 +173,7 @@ def merge():
         }
 
         total_files = len(files)
-        work_progress = total_files + 6
+        work_progress = total_files + 5
         
         def set_progress(progress):
             socketio.emit("update progress", progress)
@@ -237,26 +237,29 @@ def merge():
             set_progress((i + 1) / work_progress * 100)
             
         current_date = datetime.now().strftime("%Y-%m-%d")
-        output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
+        output_file_name = f"INCOMPLETE-Output-{bank_name}-{current_date}-{int(time())}.xlsx"
         output_file_path = os.path.join(merge_excel_folder, output_file_name)
 
         main_df.to_excel(output_file_path, index=False)
 
         predict = Predict().merge_it(output_file_path)
         set_progress((total_files + 1) / work_progress * 100)
-        set_progress((total_files + 2) / work_progress * 100)
         
         func.drop_row_with_one_cell(output_file_path)
-        set_progress((total_files + 3) / work_progress * 100)
+        set_progress((total_files + 2) / work_progress * 100)
 
         func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
-        set_progress((total_files + 4) / work_progress * 100)
+        set_progress((total_files + 3) / work_progress * 100)
 
         func.highlight_n_check_prediction(output_file_path)
-        set_progress((total_files + 5) / work_progress * 100)
+        set_progress((total_files + 4) / work_progress * 100)
         
         func.auto_fit_columns(output_file_path)
-        set_progress((total_files + 6) / work_progress * 100)
+        set_progress((total_files + 5) / work_progress * 100)
+
+        if os.path.exists(output_file_path):
+            os.rename(output_file_path, output_file_path.replace('INCOMPLETE-', ''))
+            output_file_path = output_file_path.replace('INCOMPLETE-', '')
 
         message = f"Excel file created successfully for {bank_name}. Output file: <strong><a href='file:///{output_file_path}' target='_blank'>{output_file_name}</a></strong>."
         status = True
