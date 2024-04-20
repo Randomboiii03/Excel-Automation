@@ -88,26 +88,35 @@ def feed():
 
 @app.route('/predict', methods=['POST'])
 def upload():
-    file = request.files['file']
-    file_name = secure_filename(file.filename)
-
-    if not os.path.exists(app.config['UPLOADED_FILES_DEST']):
-        os.makedirs(app.config['UPLOADED_FILES_DEST'])
-
-    file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
-    file.save(file_path)
-
-    model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.joblib")
-    result_path = os.path.join(app.config['UPLOADED_FILES_DEST'], "predictions.xlsx")
-
-    if not os.path.exists(model_path):
-        return 'No model yet', 500
-
+    file_path = ''
     try:
+        file = request.files.get('file')  # Safely get file
+
+        if not file:
+            return jsonify({"message": "No file uploaded", "status": False}), 400
+            
+        file_name = secure_filename(file.filename)
+
+        if not os.path.exists(app.config['UPLOADED_FILES_DEST']):
+            os.makedirs(app.config['UPLOADED_FILES_DEST'])
+
+        file_path = os.path.join(app.config['UPLOADED_FILES_DEST'], file_name)
+        file.save(file_path)
+        
+        model_path = os.path.join(app.config['SOURCE_FILES_DEST'], "model.joblib")
+        result_path = os.path.join(app.config['UPLOADED_FILES_DEST'], "predictions.xlsx")
+
+        if not os.path.exists(model_path):
+            return 'No model yet', 500
+        
         predict = Predict()
         result_path = predict.geocode_only(file_path)
 
         return send_file(result_path, as_attachment=True), 200
+    except FileNotFoundError:
+        return jsonify('File not found'), 404
+    except pd.errors.ParserError:
+        return jsonify('Error parsing Excel file'), 400
     except Exception as e:
         print(f'Error: {e}')
         return f'Error: {e}', 500

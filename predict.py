@@ -131,4 +131,3 @@ if __name__ == "__main__":
 
     file_path = sys.argv[1]
     print(Predict().geocode_only(file_path))
-

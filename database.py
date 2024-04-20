@@ -2,7 +2,7 @@ import psycopg2
 
 class DB:
     def __init__(self):
-        self.conn = psycopg2.connect(database="geocode", user="postgres", password="$PMadr!d1234", host="localhost", port="5432")
+        self.conn = psycopg2.connect(database="geocode", user="postgres", password="1234", host="localhost", port="5432")
         self.cur = self.conn.cursor()
 
     def create(self):
