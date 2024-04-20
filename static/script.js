@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
       allowOutsideClick: false,
       showConfirmButton: false,
       onBeforeOpen: () => {
-          Swal.showLoading();
+          // Swal.showLoading();
       }
   });
     
