@@ -232,7 +232,7 @@ def merge():
                 isIn = False
                 
                 for header in additional_header:
-                    if func.compare_string(header, col_header):
+                    if func.compare_string(header, col_header) and func.check_sub(func.clean_string(col_header), header):
                         temp_df[header] = sheet_data[col_header].astype(str)
                         isIn = True
                         break

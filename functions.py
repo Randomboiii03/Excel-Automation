@@ -22,6 +22,9 @@ def compare_string(str1, str2, threshold=90):
     similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(str2)).lower())
     return similarity_ratio >= threshold
 
+def check_sub(string1, string2):
+    return ("SUB" in string1 and "SUB" in string2) or ("SUB" not in string1 and "SUB" not in string2)
+
 def find_header(row_values, template_header):
     for data in row_values:
         for header in template_header:
