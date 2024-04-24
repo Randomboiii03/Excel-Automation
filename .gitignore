@@ -17,6 +17,9 @@ instance/
 # User uploaded files
 uploads/
 
+# User test files
+test/
+
 # Virtual environment
 venv/
 

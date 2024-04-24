@@ -50,22 +50,25 @@ class Predict():
             
 
     def with_json(self, addresses):
-        predictions = []
-        print(f'Number of addresses to predict: {len(addresses)}')
-
-        geocode = Geocode()
-        
-        for address in addresses:
-            result = geocode.search(str(address))
+        try:
+            predictions = []
+            print(f'Number of addresses to predict: {len(addresses)}')
             
-            if result:
-                predictions.append(result)
-            else:
-                predictions.append(['', ''])
+            geocode = Geocode()
+            
+            for address in addresses:
+                result = geocode.search(str(address))
+                
+                if result:
+                    predictions.append(result)
+                else:
+                    predictions.append(['', ''])
 
-        print(f"NOT FOUND: {geocode.count_not_found}")
+            print(f"NOT FOUND: {geocode.count_not_found}")
 
-        return predictions
+            return predictions
+        except Exception as e:
+            print(e)
 
 
     def merge_it(self, file_path):
@@ -80,7 +83,10 @@ class Predict():
         
         predictions = self.with_json(addresses)
 
-        wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*predictions)
+        wb['AREA'] = wb['AREA'].astype(str)
+        wb['MUNICIPALITY'] = wb['MUNICIPALITY'].astype(str)
+
+        wb.loc[prediction_mask, ['AREA', 'MUNICIPALITY']] = predictions
         wb.to_excel(file_path, index=False)
 
         self.with_machine_learning(file_path)
@@ -93,7 +99,7 @@ class Predict():
         addresses = wb['ADDRESS'].astype(str)
 
         predictions = self.with_json(addresses)
-
+        
         temp_df = pd.DataFrame()
 
         temp_df['ADDRESS'] = wb['ADDRESS']
@@ -101,7 +107,7 @@ class Predict():
         temp_df['AREA'], temp_df['MUNICIPALITY'] = zip(*predictions)
         temp_df['FINAL AREA'] = ''
         temp_df['AUTOFIELD DATE'] = ''
-
+        
         temp_df.to_excel(self.result_path, index=False)
 
         self.with_machine_learning(self.result_path)

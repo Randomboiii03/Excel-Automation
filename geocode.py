@@ -6,13 +6,10 @@ import functions as func
 import sys
 
 class Geocode():
-    def __init__(self):
+    def __init__(self, ):
         with open('source/address.json', 'r') as json_file:
             self.geocode_data = json.load(json_file)
-
-        self.df = pd.read_excel('addresses.xlsx', usecols=['ADDRESS'])
-        self.area_munis = [''] * len(self.df)
-
+            
         self.count_not_found = 0
 
 
@@ -80,23 +77,6 @@ class Geocode():
             return result
 
         return None
-
-                        
-    def main(self):
-        with tqdm(total=len(self.df['ADDRESS'])) as pbr:
-            for index, orig_address in enumerate(self.df['ADDRESS']):
-                result = self.check_in_data(func.clean_address(orig_address).upper())
-
-                if result: 
-                    self.area_munis[index] = f"{result[0]}-{result[1]}"
-                
-                pbr.update(1)
-
-        self.df["area-muni"] = self.area_munis
-        self.df.to_excel('prediction.xlsx', index=False)
-
-        print(f'Not Found: {self.count_not_found}\nFound: {len(self.area_munis) - self.count_not_found}')
-        print('FINISHED')
 
 if __name__ == '__main__':
     # Geocode().main()

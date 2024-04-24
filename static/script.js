@@ -373,66 +373,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+document.getElementById("uploadFeed").addEventListener("submit", (e) => {
+  e.preventDefault();
+  let formData = new FormData();
+  formData.append("file", document.getElementById("file").files[0]);
+  Swal.fire({
+    title:
+      '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> DATA IS CURRENTLY FEEDING <div class="custom-line"></div></h6>',
+    html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may result in corruption of the model.</p>',
 
-});
-
-
-  document.getElementById("uploadFeed").addEventListener("submit", (e) => {
-    e.preventDefault();
-    let formData = new FormData();
-    formData.append("file", document.getElementById("file").files[0]);
-    Swal.fire({
-      title:
-        '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> DATA IS CURRENTLY FEEDING <div class="custom-line"></div></h6>',
-      html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may result in corruption of the model.</p>',
-
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      willOpen: () => {
-        // Swal.showLoading()
-      },
-    });
-    fetch("/feed", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        Swal.close(); 
-        if (data.status) {
-          Swal.fire({
-            icon: "success",
-            title: data.message,
-            timer: 5000, // Adjust as needed
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            customClass: {
-              popup: 'toast-custom-class',
-              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-            }
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: data.message,
-            timer: 5000, // Adjust as needed
-            timerProgressBar: true,
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            customClass: {
-              popup: 'toast-custom-class-false',
-              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-            }
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    willOpen: () => {
+      // Swal.showLoading()
+    },
+  });
+  console.log('yey');
+  fetch("/feed", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      Swal.close(); 
+      if (data.status) {
+        Swal.fire({
+          icon: "success",
+          title: data.message,
+          timer: 5000, // Adjust as needed
+          toast: true,
+          position: 'center',
+          showConfirmButton: false,
+          customClass: {
+            popup: 'toast-custom-class',
+            backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+          }
+        });
+      } else {
         Swal.fire({
           icon: "error",
-          title: "An error occurred while processing the request.",
+          title: data.message,
           timer: 5000, // Adjust as needed
           timerProgressBar: true,
           toast: true,
@@ -443,8 +423,27 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
           }
         });
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "An error occurred while processing the request.",
+        timer: 5000, // Adjust as needed
+        timerProgressBar: true,
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        customClass: {
+          popup: 'toast-custom-class-false',
+          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+        }
       });
-  });
+    });
+});
+});
+
 
 function showLoader() {
   document.getElementById("uploadText").style.display = "none"; // Hide the upload text

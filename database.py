@@ -1,8 +1,18 @@
 import psycopg2 
+from dotenv import load_dotenv
+import os
 
 class DB:
     def __init__(self):
-        self.conn = psycopg2.connect(database="geocode", user="postgres", password="1234", host="localhost", port="5432")
+        load_dotenv()
+
+        DB_NAME = os.getenv('DB_NAME')
+        USER_NAME = os.getenv('USER_NAME')
+        PASSWORD = os.getenv('PASSWORD')
+        HOST_NAME = os.getenv('HOST_NAME')
+        PORT = os.getenv('PORT')
+
+        self.conn = psycopg2.connect(database=DB_NAME, user=USER_NAME, password=PASSWORD, host=HOST_NAME, port=PORT)
         self.cur = self.conn.cursor()
 
     def create(self):
@@ -20,7 +30,6 @@ class DB:
             count = 0
             
             for _, row in df.iterrows():
-                # print(row)
                 if (row['area-muni'] not in area_munis and row['address'] not in addresses):
                     query = "INSERT INTO model (area_muni, address) VALUES (%s, %s) ON CONFLICT DO NOTHING"
                     self.cur.execute(query, (row['area-muni'], row['address']))
