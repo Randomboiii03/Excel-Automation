@@ -253,7 +253,7 @@ class MyApp:
             func.drop_row_with_one_cell(output_file_path)
             set_progress((total_files + 2) / work_progress * 100)
 
-            func.highlight_n_fill_missing_values(output_file_path, os.join.path(self.app.config['SOURCE_FILES_DEST'], 'campaign_list.json'))
+            func.highlight_n_fill_missing_values(output_file_path, os.path.join(self.app.config['SOURCE_FILES_DEST'], 'campaign_list.json'))
             set_progress((total_files + 3) / work_progress * 100)
 
             func.highlight_n_check_prediction(output_file_path)
