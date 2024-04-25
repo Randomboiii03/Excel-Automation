@@ -66,7 +66,7 @@ class MyApp:
             # Check if the required columns are present
             required_columns = ['area-muni', 'address']
             if not all(col in df.columns for col in required_columns):
-                return jsonify({"message": "Uploaded file has the wrong column format", "status": False}), 404
+                return jsonify({"message": "Uploaded file has the wrong column format, make sure headers are in lower", "status": False}), 404
 
             # Insert data into the database
             inserted_data = db().insert(df.drop_duplicates())

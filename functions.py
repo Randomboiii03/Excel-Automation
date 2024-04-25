@@ -1,38 +1,112 @@
-from fuzzywuzzy import fuzz
-import json
-import re
-from openpyxl.styles import PatternFill, Font
-from openpyxl import load_workbook
-import pandas as pd
-import os
+from fuzzywuzzy import fuzz  # Importing fuzzywuzzy library for string matching
+import json  # Importing json module to work with JSON data
+import re  # Importing re module for regular expressions
+from openpyxl.styles import PatternFill, Font  # Importing necessary styles from openpyxl
+from openpyxl import load_workbook  # Importing load_workbook function from openpyxl
+import pandas as pd  # Importing pandas library for data manipulation
+import os  # Importing os module for interacting with the operating system
 
 
 def get_total_rows(file_path) -> int:
+    """
+    Get total number of rows in an Excel file.
+
+    Parameters:
+    file_path (str): Path to the Excel file.
+
+    Returns:
+    int: Total number of rows.
+    """
     workbook = load_workbook(file_path)
     worksheet = workbook.active
     return worksheet.max_row
 
+
 def clean_string(input_string):
+    """
+    Clean and normalize a string.
+
+    Parameters:
+    input_string (str): Input string to be cleaned.
+
+    Returns:
+    str: Cleaned and normalized string.
+    """
     return re.sub(r'[^a-zA-Z0-9\s]', ' ', input_string).upper()
 
+
 def is_empty_or_spaces(s):
+    """
+    Check if a string is empty or contains only spaces.
+
+    Parameters:
+    s (str): Input string.
+
+    Returns:
+    bool: True if the string is empty or contains only spaces, False otherwise.
+    """
     return s.replace(' ', '') == ''
 
+
 def compare_string(str1, str2, threshold=90):
+    """
+    Compare two strings for similarity using fuzzy string matching.
+
+    Parameters:
+    str1 (str): First string.
+    str2 (str): Second string.
+    threshold (int): Minimum similarity threshold (default is 90).
+
+    Returns:
+    bool: True if the strings are similar, False otherwise.
+    """
     similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(str2)).lower())
     return similarity_ratio >= threshold
 
+
 def check_sub(string1, string2):
+    """
+    Check if both strings contain 'SUB' or neither contains 'SUB'.
+
+    Parameters:
+    string1 (str): First string.
+    string2 (str): Second string.
+
+    Returns:
+    bool: True if both strings contain 'SUB' or neither contains 'SUB', False otherwise.
+    """
     return ("SUB" in string1 and "SUB" in string2) or ("SUB" not in string1 and "SUB" not in string2)
 
+
 def find_header(row_values, template_header):
+    """
+    Find if any header matches in the row values.
+
+    Parameters:
+    row_values (list): List of row values.
+    template_header (list): List of template headers to match.
+
+    Returns:
+    bool: True if any header matches, False otherwise.
+    """
     for data in row_values:
         for header in template_header:
             if compare_string(data, header):
                 return True
     return False
 
+
 def get_index_of_header(excel_file_path, template_header) -> int:
+    """
+    Get the index of the row containing the header in the Excel file.
+
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    template_header (list): List of template headers to match.
+
+    Returns:
+    int: Index of the row containing the header, -1 if not found.
+    """
     sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=None)
     if sheet_data.empty:
         return -1
@@ -41,11 +115,30 @@ def get_index_of_header(excel_file_path, template_header) -> int:
             return index
     return -1
 
+
 def map_header(mapping, header):
+    """
+    Map header to a predefined mapping.
+
+    Parameters:
+    mapping (dict): Dictionary mapping headers.
+    header (str): Header to map.
+
+    Returns:
+    str: Mapped header, or None if not found.
+    """
     cleaned_header = clean_string(header)
     return mapping.get(cleaned_header, None)
 
+
 def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
+    """
+    Highlight and fill missing values in the Excel file based on a campaign data file.
+
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    campaign_file_path (str): Path to the campaign data JSON file.
+    """
     with open(campaign_file_path, 'r') as file:
         campaign_data = json.load(file)
         
@@ -82,12 +175,26 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
                 
     book.save(excel_file_path)
 
+
 def drop_row_with_one_cell(excel_file_path):
+    """
+    Drop rows from the Excel file where there is only one cell containing data.
+
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    """
     excel_data = pd.read_excel(excel_file_path)
     excel_data = excel_data[excel_data.count(axis=1) > 1]   
     excel_data.to_excel(excel_file_path, index=False)
 
+
 def auto_fit_columns(excel_file_path):
+    """
+    Automatically adjust column widths and format headers in the Excel file.
+
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    """
     wb = load_workbook(excel_file_path)
     
     first_sheet_name = wb.sheetnames[0]
@@ -112,7 +219,17 @@ def auto_fit_columns(excel_file_path):
                     
     wb.save(excel_file_path)
 
+
 def clean_address(address):
+    """
+    Clean and normalize an address.
+
+    Parameters:
+    address (str): Input address string.
+
+    Returns:
+    str: Cleaned and normalized address string.
+    """
     address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).replace("CITY", " CITY ").split()
 
     abbreviation = {
@@ -126,10 +243,30 @@ def clean_address(address):
         
     return ' '.join(list(filter(lambda item: item.strip(), address))).replace('METRO MANILA', 'NCR')
 
+
 def remove_numbers(address):
+    """
+    Remove numbers from an address.
+
+    Parameters:
+    address (str): Input address string.
+
+    Returns:
+    str: Address string with numbers removed.
+    """
     return clean_address(re.sub(r"\d+", "", address))
 
+
 def clean_province(province):
+    """
+    Clean and normalize a province name.
+
+    Parameters:
+    province (str): Input province name.
+
+    Returns:
+    str: Cleaned and normalized province name.
+    """
     suffix = ["DEL", "NORTE", "SUR", "DE ORO", "OCCIDENTAL", "ORIENTAL", "EASTERN", "NORTHERN", "SOUTHERN", "WESTERN", "NORTH", "SOUTH", "ISLAND"]
         
     province_parts = province.split()
@@ -140,15 +277,32 @@ def clean_province(province):
         
     return cleaned_province
 
+
 def compare_address(str1, address, threshold=60):
+    """
+    Compare a string with an address for similarity.
+
+    Parameters:
+    str1 (str): First string to compare.
+    address (str): Address string to compare.
+    threshold (int): Minimum similarity threshold (default is 60).
+
+    Returns:
+    bool: True if the strings are similar, False otherwise.
+    """
     if str1.replace(' ', '').replace('Ñ', 'N') in address.replace(' ', '').replace('ñ', 'n').replace('Ñ', 'N'):
         return False
 
-    # similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(address)).lower())
-    # return similarity_ratio <= threshold
     return True
 
+
 def highlight_n_check_prediction(excel_file_path):    
+    """
+    Highlight and check prediction accuracy for addresses in the Excel file.
+
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    """
     df = pd.read_excel(excel_file_path)
 
     area_index = df.columns.get_loc('AREA') + 1
@@ -182,7 +336,7 @@ def highlight_n_check_prediction(excel_file_path):
         if (compare_address(area, address) and compare_address(municipality, address)):
             cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
 
-            if not address or len(address) <= 15:
+            if not address or len(address) <= 25:
                 cell1.value = cell2.value = ''
                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
@@ -194,7 +348,14 @@ def highlight_n_check_prediction(excel_file_path):
 
     book.save(excel_file_path)
 
+
 def delete_requests_file(folder_path):
+    """
+    Delete files in the specified folder.
+
+    Parameters:
+    folder_path (str): Path to the folder containing files to be deleted.
+    """
     files_to_delete = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     
     for file_name in files_to_delete:
