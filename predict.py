@@ -3,30 +3,35 @@ import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from openpyxl import load_workbook
-import functions as func
+import functions as func  # Assuming this is a module you've created
 from time import time
 import os
-from geocode import Geocode
+from geocode import Geocode  # Assuming this is a module you've created
 import sys
 
 
 class Predict():
     def __init__(self):
+        # Paths for model and result files
         self.model_path = 'source\\model.joblib'
         self.result_path = 'uploads\\predictions.xlsx'
         
+        # Load the ML model
         self.model = joblib.load(self.model_path)
 
+        # Create 'uploads' directory if it doesn't exist
         if not os.path.exists('uploads'):
             os.makedirs('uploads')
 
+    # Method for geocoding using machine learning
     def with_machine_learning(self, file_path):
         try:
+            # Read the Excel file
             wb = pd.read_excel(file_path)
             existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
 
-            addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
-            addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
+            # Get a list of addresses with more than 20 characters and not existing
+            addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna() & (wb['ADDRESS'].str.len() >= 20), 'ADDRESS'].tolist()
 
             prediction_mask = wb['ADDRESS'].isin(addresses)
             print(f'Number of addresses to predict: {len(addresses)}')
@@ -42,19 +47,20 @@ class Predict():
                 area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
                 area_munis_bold = [(f'**{area}', f'**{municipality}') for area, municipality in area_munis]
                     
-                wb.loc[~existing_mask & wb['ADDRESS'].notna(), ['AREA', 'MUNICIPALITY']] = area_munis_bold
+                wb.loc[~existing_mask & wb['ADDRESS'].notna() & (wb['ADDRESS'].str.len() >= 20), ['AREA', 'MUNICIPALITY']] = area_munis_bold
                 wb.to_excel(file_path, index=False)
 
         except Exception as e:
             print(e)
             
 
+    # Method for geocoding using JSON data
     def with_json(self, addresses):
         try:
             predictions = []
             print(f'Number of addresses to predict: {len(addresses)}')
             
-            geocode = Geocode()
+            geocode = Geocode()  # Assuming this is a class for geocoding
             
             for address in addresses:
                 result = geocode.search(str(address))
@@ -71,13 +77,13 @@ class Predict():
             print(e)
 
 
+    # Method to merge geocoded data with the original Excel file
     def merge_it(self, file_path):
         wb = pd.read_excel(file_path)
 
         existing_mask = (wb['AREA'].notna()) & (wb['MUNICIPALITY'].notna())
 
-        addresses = wb.loc[~existing_mask, 'ADDRESS'].tolist()
-        addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna(), 'ADDRESS'].tolist()
+        addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna() & (wb['ADDRESS'].str.len() >= 20), 'ADDRESS'].tolist()
 
         prediction_mask = wb['ADDRESS'].isin(addresses)
         
@@ -92,6 +98,7 @@ class Predict():
         self.with_machine_learning(file_path)
                 
 
+    # Main method for geocoding only
     def geocode_only(self, file_path):
         wb = pd.read_excel(file_path)
 

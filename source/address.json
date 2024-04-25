@@ -29,7 +29,7 @@
       "SANTA QUITERIA": "1402",
       "UNIVERSITY HILLS": "1407"
     },
-    "LAS PINAS": {
+    "LAS PINAS CITY": {
       "ALMANZA": "1750",
       "ANGELA VILLAGE": "1749",
       "CUT CUT": "1743",
@@ -795,7 +795,7 @@
       "SAN MIGUEL": "2301",
       "SANTA IGNACIA": "2303",
       "VICTORIA": "2313",
-      "TARLAC": "2300"
+      "TARLAC CITY": "2300"
     },
     "ZAMBALES": {
       "BOTOLAN": "2202",
@@ -1212,7 +1212,7 @@
       "PILAR": "4714",
       "PRIETO DIAZ": "4711",
       "SANTA MAGDALENA": "4709",
-      "SORSOGON": "4700"
+      "SORSOGON CITY": "4700"
     }
   },
   "CAR": {
