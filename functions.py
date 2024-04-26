@@ -361,3 +361,6 @@ def delete_requests_file(folder_path):
     for file_name in files_to_delete:
         file_path = os.path.join(folder_path, file_name)
         os.remove(file_path)
+
+if __name__ == "__main__":
+    print(compare_string("Disposition", "sub_disposition"))
