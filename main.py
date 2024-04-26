@@ -11,6 +11,7 @@ import functions as func
 from dotenv import load_dotenv
 from datetime import datetime
 from time import sleep, time
+import shutil
 
 load_dotenv()
 
@@ -263,14 +264,15 @@ class MyApp:
             set_progress((total_files + 5) / work_progress * 100)
 
             if os.path.exists(output_file_path):
-                os.rename(output_file_path, output_file_path.replace('INCOMPLETE-', ''))
+                shutil.copy(output_file_path, output_file_path.replace('INCOMPLETE-', ''))
 
             message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_path.replace('INCOMPLETE-', '')}</strong>."
             status = True
 
         except Exception as e:
             message = f"{e}"
-            
+        
+        finally:
             if os.path.exists(output_file_path):
                 os.remove(output_file_path)
             

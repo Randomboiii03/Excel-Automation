@@ -325,7 +325,7 @@ def highlight_n_check_prediction(excel_file_path):
 
         cell3.value = cell4.value = ''
 
-        area = clean_province(str(row["AREA"]))
+        area = str(row["AREA"])
         municipality = str(row["MUNICIPALITY"])
 
         if '**' in area and '**' in municipality:
@@ -333,14 +333,14 @@ def highlight_n_check_prediction(excel_file_path):
             cell1.value = area.replace('**', '')
             cell2.value = municipality.replace('**', '')
 
-        if (compare_address(area, address) and compare_address(municipality, address)):
+        if (compare_address(clean_province(area), address) and compare_address(municipality, address)):
             cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
 
             if not address or len(address) <= 25:
                 cell1.value = cell2.value = ''
                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
-        elif compare_address(area, address):
+        elif compare_address(clean_province(area), address):
             cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
         elif compare_address(municipality, address):
            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
