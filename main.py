@@ -243,7 +243,7 @@ class MyApp:
                 set_progress((i + 1) / work_progress * 100)
                 
             current_date = datetime.now().strftime("%Y-%m-%d")
-            output_file_name = f"INCOMPLETE-Output-{bank_name}-{current_date}-{int(time())}.xlsx"
+            output_file_name = f"Output-{bank_name}-{current_date}-{int(time())}.xlsx"
             output_file_path = os.path.join(merge_excel_folder, output_file_name)
 
             main_df.to_excel(output_file_path, index=False)
@@ -263,22 +263,24 @@ class MyApp:
             func.auto_fit_columns(output_file_path)
             set_progress((total_files + 5) / work_progress * 100)
 
-            if os.path.exists(output_file_path):
-                shutil.copy(output_file_path, output_file_path.replace('INCOMPLETE-', ''))
+            # if os.path.exists(output_file_path):
+            #     shutil.copy(output_file_path, output_file_path.replace('INCOMPLETE-', ''))
 
-            message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_path.replace('INCOMPLETE-', '')}</strong>."
+            message = f"Excel file created successfully for {bank_name}. Output file: <strong>{output_file_path}</strong>."
             status = True
 
         except Exception as e:
             message = f"{e}"
-        
-        finally:
-            if os.path.exists(output_file_path):
-                os.remove(output_file_path)
+
+            try:
+                if 'output_file_path' in locals() and os.path.exists(output_file_path):
+                    os.remove(output_file_path)
+
+            except OSError as e:
+                print(f"Error deleting file: {e}")
+            
             
         data_to_return = {'message': message, 'file_path': folder_path, 'status': status}
-
-        sleep(1)
 
         return jsonify(data_to_return)
 

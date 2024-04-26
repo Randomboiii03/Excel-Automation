@@ -44,6 +44,12 @@ class Geocode():
         
         return None
 
+    def slice_address(self, string, num):
+        length = len(string)
+        three_fourths_length = length * num // 4
+        three_fourths_string = string[three_fourths_length:]
+        return three_fourths_string
+
     def check_in_data(self, orig_address):
         """
         Check if the address is in the geocode data.
@@ -55,39 +61,43 @@ class Geocode():
             list or None: List containing region, province, and municipality if found, None otherwise.
         """
         found_zipcode = self.search_zipcode(orig_address)
-        orig_address = func.remove_numbers(orig_address)
-        
-        for region in self.geocode_data:
-            if region == 'NCR':
-                province = region
+        temp_address = func.remove_numbers(orig_address)
 
-                if self.check_address(province, orig_address):
-                    for municipality in self.geocode_data[region]:
-                        if self.check_address(municipality.replace(' CITY', ''), orig_address):
-                            return [province, municipality]
-                    
-                    for municipality in self.geocode_data[region]:
-                        for submuni in self.geocode_data[region][municipality]:
-                            if self.check_address(submuni, orig_address):
+        for i in range(3, -1, -1):
+            orig_address = self.slice_address(temp_address, i)
+            print(orig_address)
+
+            for region in self.geocode_data:
+                if region == 'NCR':
+                    province = region
+
+                    if self.check_address(province, orig_address):
+                        for municipality in self.geocode_data[region]:
+                            if self.check_address(municipality.replace(' CITY', ''), orig_address):
                                 return [province, municipality]
+                        
+                        for municipality in self.geocode_data[region]:
+                            for submuni in self.geocode_data[region][municipality]:
+                                if self.check_address(submuni, orig_address):
+                                    return [province, municipality]
 
-            else:
+                else:
+                    for province in self.geocode_data[region]:
+                        if self.check_address(func.clean_province(province), orig_address):
+                            for municipality in self.geocode_data[region][province]:
+                                if self.check_address(municipality, orig_address):
+                                    return [province, municipality]
+
+            for region in self.geocode_data:
                 for province in self.geocode_data[region]:
-                    if self.check_address(func.clean_province(province), orig_address):
-                        for municipality in self.geocode_data[region][province]:
-                            if self.check_address(municipality, orig_address):
-                                return [province, municipality]
-
-        for region in self.geocode_data:
-            for province in self.geocode_data[region]:
-                for municipality in self.geocode_data[region][province]:
-                    if found_zipcode:
-                        zipcode = self.geocode_data[region][province][municipality]
-                        if found_zipcode == zipcode:
-                            if region == "NCR":
-                                return [region, province]
-                            else:
-                                return [province, municipality]
+                    for municipality in self.geocode_data[region][province]:
+                        if found_zipcode:
+                            zipcode = self.geocode_data[region][province][municipality]
+                            if found_zipcode == zipcode:
+                                if region == "NCR":
+                                    return [region, province]
+                                else:
+                                    return [province, municipality]
 
         self.count_not_found += 1
         return None
