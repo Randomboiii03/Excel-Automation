@@ -85,17 +85,18 @@ class Predict():
 
         addresses = wb.loc[~existing_mask & wb['ADDRESS'].notna() & (wb['ADDRESS'].str.len() >= 20), 'ADDRESS'].tolist()
 
-        prediction_mask = wb['ADDRESS'].isin(addresses)
+        if len(addresses) > 0:
+            prediction_mask = wb['ADDRESS'].isin(addresses)
         
-        predictions = self.with_json(addresses)
+            predictions = self.with_json(addresses)
 
-        wb['AREA'] = wb['AREA'].astype(str)
-        wb['MUNICIPALITY'] = wb['MUNICIPALITY'].astype(str)
+            wb['AREA'] = wb['AREA'].astype(str)
+            wb['MUNICIPALITY'] = wb['MUNICIPALITY'].astype(str)
 
-        wb.loc[prediction_mask, ['AREA', 'MUNICIPALITY']] = predictions
-        wb.to_excel(file_path, index=False)
+            wb.loc[prediction_mask, ['AREA', 'MUNICIPALITY']] = predictions
+            wb.to_excel(file_path, index=False)
 
-        self.with_machine_learning(file_path)
+            self.with_machine_learning(file_path)
                 
 
     # Main method for geocoding only

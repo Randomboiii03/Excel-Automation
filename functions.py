@@ -337,7 +337,7 @@ def highlight_n_check_prediction(excel_file_path):
             cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
 
             if not address or len(address) <= 25:
-                cell1.value = cell2.value = ''
+                # cell1.value = cell2.value = ''
                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
         elif compare_address(clean_province(area), address):
