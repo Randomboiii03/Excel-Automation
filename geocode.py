@@ -83,10 +83,8 @@ class Geocode():
                 else:
                     for province in self.geocode_data[region]:
                         if self.check_address(func.clean_province(province), orig_address):
-                            print(province)
                             for municipality in self.geocode_data[region][province]:
-                                print(func.check_city(province, municipality))
-                                if self.check_address(, orig_address):
+                                if self.check_address(func.check_city(province, municipality), orig_address):
                                     return [province, municipality]
 
         for region in self.geocode_data:
