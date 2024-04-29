@@ -65,7 +65,7 @@ class Geocode():
 
         for i in range(3, -1, -1):
             orig_address = self.slice_address(temp_address, i)
-
+            print(orig_address)
             for region in self.geocode_data:
                 if region == 'NCR':
                     province = region
@@ -83,23 +83,25 @@ class Geocode():
                 else:
                     for province in self.geocode_data[region]:
                         if self.check_address(func.clean_province(province), orig_address):
+                            print(province)
                             for municipality in self.geocode_data[region][province]:
-                                if self.check_address(municipality, orig_address):
+                                print(func.check_city(province, municipality))
+                                if self.check_address(, orig_address):
                                     return [province, municipality]
 
-            for region in self.geocode_data:
-                for province in self.geocode_data[region]:
-                    for municipality in self.geocode_data[region][province]:
-                        if region != "NCR" and self.check_address(region, orig_address) and self.check_address(municipality, orig_address):
-                            return [province, municipality]
+        for region in self.geocode_data:
+            for province in self.geocode_data[region]:
+                for municipality in self.geocode_data[region][province]:
+                    if region != "NCR" and self.check_address(region, orig_address) and self.check_address(func.check_city(province, municipality), orig_address):
+                        return [province, municipality]
 
-                        if found_zipcode:
-                            zipcode = self.geocode_data[region][province][municipality]
-                            if found_zipcode == zipcode:
-                                if region == "NCR":
-                                    return [region, province]
-                                else:
-                                    return [province, municipality]
+                    if found_zipcode:
+                        zipcode = self.geocode_data[region][province][municipality]
+                        if found_zipcode == zipcode:
+                            if region == "NCR":
+                                return [region, province]
+                            else:                                    
+                                return [province, municipality]
 
         self.count_not_found += 1
         return None
