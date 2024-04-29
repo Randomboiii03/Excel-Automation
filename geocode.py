@@ -65,7 +65,6 @@ class Geocode():
 
         for i in range(3, -1, -1):
             orig_address = self.slice_address(temp_address, i)
-            print(orig_address)
 
             for region in self.geocode_data:
                 if region == 'NCR':
@@ -91,6 +90,9 @@ class Geocode():
             for region in self.geocode_data:
                 for province in self.geocode_data[region]:
                     for municipality in self.geocode_data[region][province]:
+                        if region != "NCR" and self.check_address(region, orig_address) and self.check_address(municipality, orig_address):
+                            return [province, municipality]
+
                         if found_zipcode:
                             zipcode = self.geocode_data[region][province][municipality]
                             if found_zipcode == zipcode:

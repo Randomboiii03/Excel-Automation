@@ -230,18 +230,35 @@ def clean_address(address):
     Returns:
     str: Cleaned and normalized address string.
     """
-    address = re.sub(r"[^a-zA-Z0-9\s]", " ", address.upper().replace('Ñ', 'N')).replace("CITY", " CITY ").split()
+    address = re.sub(r"[^a-zA-Z0-9\s]", " ", re.sub(r"[^\w\s`~!@#$%^&*()\_\-+=\[\]{};:'\"\\|,<.>\/]", "N", address.upper().replace('Ñ', 'N'))).split()
 
     abbreviation = {
         "GEN": "GENERAL",
         "STA": "SANTA",
-        "STO": "SANTO"
+        "STO": "SANTO",
+        "NATIONAL CAPITAL REGION": "NCR",
+        "METRO MANILA": "NCR"
     }
     
     for key, value in abbreviation.items():
         address = [value if word == key else word for word in address]
+
+    address = ' '.join(list(filter(lambda item: item.strip(), address)))
+
+    area = {
+        "NATIONAL CAPITAL REGION": "NCR",
+        "METRO MANILA": "NCR",
+        "AUTONOMOUS REGION IN MUSLIM MINDANAO": "ARMM",
+        "BANGSAMORO AUTONOMOUS REGION IN MUSLIM MINDANAO": "BARMM",
+        "CORDILLERA ADMINISTRATIVE REGION": "CAR",
+        "SOCSARGEN": "SOCCSKSARGEN",
+        "CITY": " CITY "        
+    }
         
-    return ' '.join(list(filter(lambda item: item.strip(), address))).replace('METRO MANILA', 'NCR')
+    for key, value in area.items():
+        address = address.replace(key, value) if key in address else address
+        
+    return ' '.join(list(filter(lambda item: item.strip(), address.split())))
 
 
 def remove_numbers(address):
@@ -254,7 +271,7 @@ def remove_numbers(address):
     Returns:
     str: Address string with numbers removed.
     """
-    return clean_address(re.sub(r"\d+", "", address))
+    return clean_address(re.sub(r"\d+", "", address).upper())
 
 
 def clean_province(province):
@@ -295,6 +312,11 @@ def compare_address(str1, address, threshold=60):
 
     return True
 
+def check_city(area, municipality):
+    if area not in municipality and "CITY" in municipality and "QUEZON" not in municipality:
+        return municipality.replace("CITY", "").strip()
+    return municipality
+
 
 def highlight_n_check_prediction(excel_file_path):    
     """
@@ -330,10 +352,10 @@ def highlight_n_check_prediction(excel_file_path):
 
         if '**' in area and '**' in municipality:
             cell1.font = cell2.font = Font(bold=True)
-            cell1.value = area.replace('**', '')
-            cell2.value = municipality.replace('**', '')
+            cell1.value = area = area.replace('**', '')
+            cell2.value = municipality = municipality.replace('**', '')
 
-        if (compare_address(clean_province(area), address) and compare_address(municipality, address)):
+        if (compare_address(clean_province(area), address) and compare_address(check_city(area, municipality), address)):
             cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
 
             if not address or len(address) <= 25:
@@ -342,7 +364,7 @@ def highlight_n_check_prediction(excel_file_path):
 
         elif compare_address(clean_province(area), address):
             cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-        elif compare_address(municipality, address):
+        elif compare_address(check_city(area, municipality), address):
            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
             
 
