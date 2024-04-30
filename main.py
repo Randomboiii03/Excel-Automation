@@ -271,7 +271,6 @@ class MyApp:
 
         except Exception as e:
             message = f"{e}"
-
             try:
                 if 'output_file_path' in locals() and os.path.exists(output_file_path):
                     os.remove(output_file_path)
@@ -279,6 +278,7 @@ class MyApp:
             except OSError as e:
                 print(f"Error deleting file: {e}")
             
+
             
         data_to_return = {'message': message, 'file_path': folder_path, 'status': status}
 
