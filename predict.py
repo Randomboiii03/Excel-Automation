@@ -122,7 +122,7 @@ class Predict():
 
         func.highlight_n_check_prediction(self.result_path)
         func.auto_fit_columns(self.result_path)
-
+        print("yes")
         wb = load_workbook(self.result_path)
         ws = wb.active
 
