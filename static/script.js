@@ -6,6 +6,7 @@ window.onload = function () {
   const progressBar = document.getElementById("progressBar");
   const progressText = document.getElementById("progressText");
   const mergeButton = document.getElementById("mergeButton");
+  const predictButton = document.getElementById("predictButton");
   const progressContainer = document.getElementById("progress");
   const messageContainer = document.getElementById("message");
   const messageStatus = document.getElementById("messageStatus");
@@ -174,7 +175,6 @@ window.onload = function () {
         },
       }).then((result) => {
         if (result.isConfirmed) {
-          // Proceed with leaving
           location.reload();
         } else {
           // Stay on the page
@@ -274,7 +274,7 @@ function promptForPassword(formToShow) {
             // Swal.fire({
             //   html: '<i class="fas fa-exclamation-circle" style="font-size: 24px; color:red;"></i> Invalid input.',
             //   confirmButtonText: "RETRY",
-            //   timer: 10000,
+            //   timer: 10000,/pre
             // });
             Swal.fire({
                 icon: 'error',
@@ -300,8 +300,7 @@ function promptForPassword(formToShow) {
 }
 
 
-
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", ()=> {
   const navbarToggle = document.getElementById("navbar-toggle");
   const navbar = document.querySelector(".navbar");
   navbar.style.transform = "translateY(-100%)";
@@ -312,114 +311,108 @@ document.addEventListener("DOMContentLoaded", function () {
       navbar.style.transform = "translateY(-100%)";
     }
   });
-
-  const uploadForm = document.getElementById("uploadForm");
-  const fileInput = document.getElementById("fileInput");
-
-  uploadForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const file = fileInput.files[0];
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    // Loading
-
-    try {
-      const response = await fetch("/predict", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.text();
-
-      // Handle successful upload response
-      console.log(data);
-      // Trigger Sweet Alert notification
-      Swal.fire({
-        icon: 'success',
-        title: 'File processing completed',
-        timer: 5000, // Adjust as needed
-        timerProgressBar: true,
-        toast: true,
-        position: 'center',
-        showConfirmButton: false,
-        customClass: {
-          popup: 'toast-custom-class',
-          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-        }
-      });
-    } catch (error) {
-      // Handle errors
-      console.error("There was an error with the upload:", error);
-      // Optionally, trigger an error Sweet Alert notification
-     
-    }
-  });
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("uploadFeed").addEventListener("submit", (e) => {
-    e.preventDefault();
-    let formData = new FormData();
-    formData.append("file", document.getElementById("file").files[0]);
-    Swal.fire({
-      title:
-        '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> DATA IS CURRENTLY FEEDING <div class="custom-line"></div></h6>',
-      html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may result in corruption of the model.</p>',
+  document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
 
+    let formData = new FormData();
+    let fileInput = document.getElementById('fileInput');
+    formData.append('file', fileInput.files[0]);
+
+    Swal.fire({
+      title: '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> PREDICTING <div class="custom-line"></div></h6>',
+      html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may affect the prediction result.</p>',
       allowOutsideClick: false,
       showConfirmButton: false,
-      willOpen: () => {
-        // Swal.showLoading()
-      },
-    });
-    fetch("/feed", {
-      method: "POST",
-      body: formData,
+      onBeforeOpen: () => {
+          // Swal.showLoading();
+      }
+  });
+    
+    fetch('/predict', {
+        method: 'POST',
+        body: formData
     })
-      .then((response) => response.json())
-      .then((data) => {
-        Swal.close(); 
-        if (data.status) {
-          Swal.fire({
-            icon: "success",
-            title: data.message,
-            timer: 5000, // Adjust as needed
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            customClass: {
-              popup: 'toast-custom-class',
-              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-            }
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: data.message,
-            timer: 5000, // Adjust as needed
-            timerProgressBar: true,
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            customClass: {
-              popup: 'toast-custom-class-false',
-              backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
-            }
-          });
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+        // Check content type to determine how to handle the response
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json(); // Parse JSON response
+        } else if (contentType && contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+            return response.blob(); // Parse Excel file response
+        } else {
+            throw new Error('Unsupported content type');
+        }
+        Swal.close();
+    })
+    .then(data => {
+        if (typeof data === 'string') {
+            // Handle string response, e.g., show error message
+            console.error('Error:', data);
+            // Handle error here, e.g., show error message to user
+        } else {
+            // Assume it's a file download
+            const url = window.URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'predictions.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+        Swal.close();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Handle error here, e.g., show error message to user
+    });
+});
+
+document.getElementById("uploadFeed").addEventListener("submit", (e) => {
+  e.preventDefault();
+  let formData = new FormData();
+  formData.append("file", document.getElementById("file").files[0]);
+  Swal.fire({
+    title:
+      '<h6 style="font-size:25px;"> <i class="fas fa-spinner animated-spinner"></i> DATA IS CURRENTLY FEEDING <div class="custom-line"></div></h6>',
+    html: '<p style="color:red; font-size:12px; text-align:left; "><strong>Note:</strong> Interrupting or canceling this process may result in corruption of the model.</p>',
+
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    willOpen: () => {
+      // Swal.showLoading()
+    },
+  });
+  console.log('yey');
+  fetch("/feed", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      Swal.close(); 
+      if (data.status) {
+        Swal.fire({
+          icon: "success",
+          title: data.message,
+          timer: 5000, // Adjust as needed
+          toast: true,
+          position: 'center',
+          showConfirmButton: false,
+          customClass: {
+            popup: 'toast-custom-class',
+            backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+          }
+        });
+      } else {
         Swal.fire({
           icon: "error",
-          title: "An error occurred while processing the request.",
+          title: data.message,
           timer: 5000, // Adjust as needed
           timerProgressBar: true,
           toast: true,
@@ -430,9 +423,27 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
           }
         });
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "An error occurred while processing the request.",
+        timer: 5000, // Adjust as needed
+        timerProgressBar: true,
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        customClass: {
+          popup: 'toast-custom-class-false',
+          backdrop: 'toast-backdrop-class' // Add custom class for the backdrop if needed
+        }
       });
-  });
+    });
 });
+});
+
 
 function showLoader() {
   document.getElementById("uploadText").style.display = "none"; // Hide the upload text
