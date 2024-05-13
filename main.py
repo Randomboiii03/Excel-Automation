@@ -31,7 +31,7 @@ db().create()
 @app.route('/download_file')
 def download_file():
     # Path to the file you want to download
-    file_path = './source/template.xlsx'
+    file_path = './source/template2.xlsx'
 
     # Return the file as an attachment
     return send_file(file_path, as_attachment=True)
