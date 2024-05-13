@@ -15,7 +15,7 @@ def load_model_predict(file_path):
 
         # Assume `addresses.xlsx` contains a column 'address' with the addresses to predict
         df_to_predict = pd.read_excel(file_path)
-
+        df_to_predict['addresws'] = df_to_predict['address'].str.upper()
         # Drop rows with NaN values in 'address'
         df_to_predict.dropna(subset=['address'], inplace=True)
         predictions = model.predict(df_to_predict['address'].astype(str))
