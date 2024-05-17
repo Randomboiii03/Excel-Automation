@@ -292,6 +292,8 @@ def highlight_n_check_prediction(excel_file_path):
     sheet = book.active
 
     pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+    error_fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+    match_fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
 
     for row_index, row in df.iterrows():
         address = remove_numbers(str(row['ADDRESS']))
@@ -312,29 +314,37 @@ def highlight_n_check_prediction(excel_file_path):
             cell2.value = municipality = municipality.replace('**', '')
 
         if not address or len(address) <= 25:
-            cell1.value = cell2.value = ''
-            cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+            if not cell1.value:
+                cell1.fill = error_fill
+            if not cell2.value:
+                cell2.fill = error_fill
 
         if (compare_address(clean_province(area), address) and compare_address(check_city(area, municipality), address)):
-            cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
+            cell1.fill = cell2.fill = pattern_fill
 
             if not address or len(address) <= 25:
-                cell1.value = cell2.value = ''
-                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+                if not cell1.value:
+                    cell1.fill = error_fill
+                if not cell2.value:
+                    cell2.fill = error_fill
 
         elif compare_address(clean_province(area), address):
-            cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+            cell1.fill = match_fill
 
             if not address or len(address) <= 25:
-                cell1.value = cell2.value = ''
-                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+                if not cell1.value:
+                    cell1.fill = error_fill
+                if not cell2.value:
+                    cell2.fill = error_fill
 
         elif compare_address(check_city(area, municipality), address):
-            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+            cell2.fill = match_fill
             
             if not address or len(address) <= 25:
-                cell1.value = cell2.value = ''
-                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+                if not cell1.value:
+                    cell1.fill = error_fill
+                if not cell2.value:
+                    cell2.fill = error_fill
 
     book.save(excel_file_path)
 

@@ -247,25 +247,22 @@ def merge():
         
         if addresses:
             predictions = model.predict(addresses) 
-        else:
-            predictions = []
 
-        print(f'Number of predictions: {len(predictions)}')  # Debugging line
-        
-        area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
-        
-        wb.loc[prediction_mask, 'AREA'], wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
-        
-        wb.to_excel(output_file_path, index=False)
-        
-        set_progress((total_files + 4) / work_progress * 100)
+            print(f'Number of predictions: {len(predictions)}')
+
+            area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
+            
+            wb.loc[prediction_mask, 'AREA'],wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
+
+            wb.to_excel(output_file_path, index = False)
         
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
         
         set_progress((total_files + 5) / work_progress * 100)
         
-        func.highlight_n_check_prediction(output_file_path)
+        if(addresses):
+            func.highlight_n_check_prediction(output_file_path)
         func.auto_fit_columns(output_file_path)
 
         set_progress((total_files + 6) / work_progress * 100)
