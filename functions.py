@@ -206,6 +206,62 @@ def remove_numbers(address):
     """
     return clean_address(re.sub(r"\d+", "", address).upper())
 
+def highlight_n_check_prediction(excel_file_path):    
+    """
+    Highlight and check prediction accuracy for addresses in the Excel file.
+    Parameters:
+    excel_file_path (str): Path to the Excel file.
+    """
+    df = pd.read_excel(excel_file_path)
+    area_index = df.columns.get_loc('AREA') + 1
+    municipality_index = df.columns.get_loc('MUNICIPALITY') + 1
+    final_area_index = df.columns.get_loc('FINAL AREA') + 1
+    autofield_date_index = df.columns.get_loc('AUTOFIELD DATE') + 1
+    
+    book = load_workbook(excel_file_path)
+    sheet = book.active
+    pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+    for row_index, row in df.iterrows():
+        address = remove_numbers(str(row['ADDRESS']))
+        cell1 = sheet.cell(row=row_index + 2, column=area_index)
+        cell2 = sheet.cell(row=row_index + 2, column=municipality_index)
+        cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
+        cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
+        cell3.value = cell4.value = ''
+        area = str(row["AREA"])
+        municipality = str(row["MUNICIPALITY"])
+        if '**' in area and '**' in municipality:
+            cell1.font = cell2.font = Font(bold=True)
+            cell1.value = area = area.replace('**', '')
+            cell2.value = municipality = municipality.replace('**', '')
+
+        if not address or len(address) <= 25:
+            cell1.value = cell2.value = ''
+            cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+
+        if (compare_address(clean_province(area), address) and compare_address(check_city(area, municipality), address)):
+            cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
+
+            if not address or len(address) <= 25:
+                cell1.value = cell2.value = ''
+                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+
+        elif compare_address(clean_province(area), address):
+            cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+
+            if not address or len(address) <= 25:
+                cell1.value = cell2.value = ''
+                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+
+        elif compare_address(check_city(area, municipality), address):
+            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+
+            if not address or len(address) <= 25:
+                cell1.value = cell2.value = ''
+                cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+
+    book.save(excel_file_path)
+
 # def highlight_n_check_prediction(excel_file_path):    
 #     """
 #     Highlight and check prediction accuracy for addresses in the Excel file.
@@ -252,101 +308,23 @@ def remove_numbers(address):
 
 #             if not address or len(address) <= 25:
 #                 cell1.value = cell2.value = ''
-#                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")    
-
-#         if (compare_address(check_city(area, municipality), address)):
-#             cell1.fill = cell2.fill = PatternFill(start_color="ffa200", end_color="ffa200", fill_type="solid")
-        
-#             if not address or len(address) <= 25:
-#                 cell1.value = cell2.value = ''
 #                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
 #         elif compare_address(clean_province(area), address):
 #             cell1.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-            
-#             # if len(address) <= 25:
-#             #     cell1.value = cell2.value = ''
-#             #     cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
+
+#             if not address or len(address) <= 25:
+#                 cell1.value = cell2.value = ''
+#                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
 #         elif compare_address(check_city(area, municipality), address):
-#            cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
+#             cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
             
+#             if not address or len(address) <= 25:
+#                 cell1.value = cell2.value = ''
+#                 cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
 
 #     book.save(excel_file_path)
-
-def highlight_n_check_prediction(excel_file_path):    
-    """
-    Highlight and check prediction accuracy for addresses in the Excel file.
-
-    Parameters:
-    excel_file_path (str): Path to the Excel file.
-    """
-    df = pd.read_excel(excel_file_path)
-
-    area_index = df.columns.get_loc('AREA') + 1
-    municipality_index = df.columns.get_loc('MUNICIPALITY') + 1
-    final_area_index = df.columns.get_loc('FINAL AREA') + 1
-    autofield_date_index = df.columns.get_loc('AUTOFIELD DATE') + 1
-    
-    book = load_workbook(excel_file_path)
-    sheet = book.active
-
-    pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
-    error_fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
-    match_fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
-
-    for row_index, row in df.iterrows():
-        address = remove_numbers(str(row['ADDRESS']))
-
-        cell1 = sheet.cell(row=row_index + 2, column=area_index)
-        cell2 = sheet.cell(row=row_index + 2, column=municipality_index)
-        cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
-        cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
-
-        cell3.value = cell4.value = ''
-
-        area = str(row["AREA"])
-        municipality = str(row["MUNICIPALITY"])
-
-        if '**' in area and '**' in municipality:
-            cell1.font = cell2.font = Font(bold=True)
-            cell1.value = area = area.replace('**', '')
-            cell2.value = municipality = municipality.replace('**', '')
-
-        if not address or len(address) <= 25:
-            if not cell1.value:
-                cell1.fill = error_fill
-            if not cell2.value:
-                cell2.fill = error_fill
-
-        if (compare_address(clean_province(area), address) and compare_address(check_city(area, municipality), address)):
-            cell1.fill = cell2.fill = pattern_fill
-
-            if not address or len(address) <= 25:
-                if not cell1.value:
-                    cell1.fill = error_fill
-                if not cell2.value:
-                    cell2.fill = error_fill
-
-        elif compare_address(clean_province(area), address):
-            cell1.fill = match_fill
-
-            if not address or len(address) <= 25:
-                if not cell1.value:
-                    cell1.fill = error_fill
-                if not cell2.value:
-                    cell2.fill = error_fill
-
-        elif compare_address(check_city(area, municipality), address):
-            cell2.fill = match_fill
-            
-            if not address or len(address) <= 25:
-                if not cell1.value:
-                    cell1.fill = error_fill
-                if not cell2.value:
-                    cell2.fill = error_fill
-
-    book.save(excel_file_path)
 
 def delete_requests_file(folder_path):
     files_to_delete = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
