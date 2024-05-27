@@ -230,7 +230,6 @@ def merge():
         
         set_progress((total_files + 1) / work_progress * 100)
         
-        model = joblib.load('source\\model.joblib')
         wb = pd.read_excel(output_file_path)
 
         set_progress((total_files + 2) / work_progress * 100)
@@ -244,17 +243,22 @@ def merge():
         print(f'Number of addresses to predict: {len(addresses)}')  # Debugging line
 
         set_progress((total_files + 3) / work_progress * 100)
-        
-        if addresses:
-            predictions = model.predict(addresses) 
 
-            print(f'Number of predictions: {len(predictions)}')
+        model_names = ["area_model", "muni_model"]
 
-            area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
-            
-            wb.loc[prediction_mask, 'AREA'],wb.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
+        for index, model_name in enumerate(model_names):
+            model = joblib.load(f'source\\{model_name}.joblib')
 
-            wb.to_excel(output_file_path, index = False)
+            if addresses:
+                predictions = model.predict(addresses) 
+
+                print(f'Number of predictions: {len(predictions)}')
+
+                # area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
+                
+                wb.loc[prediction_mask, 'AREA' if index == 0 else "MUNICIPALITY"] = predictions
+
+                wb.to_excel(output_file_path, index = False)
         
         func.drop_row_with_one_cell(output_file_path)
         func.highlight_n_fill_missing_values(output_file_path, 'source\\campaign_list.json' )
