@@ -183,9 +183,10 @@ class DB:
                 cur = conn.cursor()
 
                 sql = """
-                    SELECT area_muni, (address <-> %s) * 100 AS dist
+                    SELECT area_muni, SIMILARITY(address, %s) * 100 AS similarity_percentage
                     FROM model
-                    ORDER BY dist LIMIT 10
+                    ORDER BY similarity_percentage DESC
+                    LIMIT 10;
                     """
 
                 cur.execute(sql, (address,))
@@ -195,10 +196,10 @@ class DB:
                 area_muni_list = [row[0] for row in rows]
                 similarity_percentage = [row[1] for row in rows]
 
-                indices_greater_than_50 = [i for i, score in enumerate(similarity_percentage) if score <= 50.0]
+                indices_greater_than_50 = [i for i, score in enumerate(similarity_percentage) if score >= 40.0]
 
                 if indices_greater_than_50:
-                    highest_index = min(indices_greater_than_50, key=lambda x: similarity_percentage[x])
+                    highest_index = max(indices_greater_than_50, key=lambda x: similarity_percentage[x])
 
                     return area_muni_list[highest_index], similarity_percentage[highest_index]
 
