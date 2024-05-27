@@ -88,7 +88,7 @@ class Predict():
                 area = row['AREA']
                 municipality = row['MUNICIPALITY']
                 temp = str(row['ADDRESS'])
-                address = func.clean_address(temp)
+                address = func.remove_numbers(temp)
 
                 if pd.isna(area) and pd.isna(municipality) and len(temp) >= 25:
                     print(index, '-', address)
