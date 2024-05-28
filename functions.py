@@ -170,7 +170,6 @@ def compare_address(str1, address, threshold=60):
     """
     if str1.replace(' ', '').replace('Ñ', 'N') in address.replace(' ', '').replace('ñ', 'n').replace('Ñ', 'N'):
         return False
-
     return True
 
 def clean_province(province):
@@ -221,6 +220,7 @@ def highlight_n_check_prediction(excel_file_path):
     book = load_workbook(excel_file_path)
     sheet = book.active
     pattern_fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
+    
     for row_index, row in df.iterrows():
         address = remove_numbers(str(row['ADDRESS']))
         cell1 = sheet.cell(row=row_index + 2, column=area_index)
