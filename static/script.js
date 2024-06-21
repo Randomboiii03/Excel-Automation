@@ -117,9 +117,9 @@ window.onload = function () {
   });
 
   mergeForm.onsubmit = function (event) {
-    event.preventDefault();
+    // event.preventDefault();
     const formData = new FormData(mergeForm);
-    bankName.disabled = true;
+    // bankName.disabled = true;
     fetch("/merge", {
       method: "POST",
       body: formData,
