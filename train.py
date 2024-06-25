@@ -14,26 +14,25 @@ import streamlit as st
 
 def train_model_save_joblib():
     try:        
-        print("Fetching data")
+        print("Fetching data from database")
         area_munis, addresses = db().select()
-        print(area_munis, addresses)
         # db().close()
 
         if area_munis is None and addresses is None:
             return False
 
-        st.write("Splitting...")
+        st.write("Splitting dataset")
         # Splitting the data into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(addresses, area_munis, test_size=0.2, random_state=42)
 
-        st.write("Setting pipeline...")
+        st.write("Setting pipeline for training")
         # Creating a pipeline with TF-IDF vectorizer and SGDClassifier
         pipeline = Pipeline([
             ('tfidf', TfidfVectorizer()),
             ('clf', SGDClassifier(loss='hinge', penalty='l2', random_state=42))
         ])
         
-        st.write("Start training...")
+        st.write("Start training the model")
         # Training the model
         pipeline.fit(X_train, y_train)
         
@@ -42,9 +41,10 @@ def train_model_save_joblib():
         # accuracy = accuracy_score(y_test, y_pred)
         # st.write(f"Model accuracy: {accuracy}")
         
+        st.write("Creating model")
         # Saving the trained model to a joblib file
         joblib.dump(pipeline, './source/model.joblib')
-        st.write("Model saved to 'model.joblib'")
+        st.write("Model created successfully")
 
         return True
         

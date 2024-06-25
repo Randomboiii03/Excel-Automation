@@ -9,14 +9,20 @@ class Datafeed:
             st.header('DATA FEED THINGS')
             
             self.datafeed_file = st.file_uploader('Choose a XLXS file', type=['xlsx'])
+            
+            with st.popover("Upload"):
+                passcode = st.text_input("Type passcode:", type="password")
 
-            datafeed_upload_button = st.button('Upload', key="datafeed_upload_button")
+                datafeed_upload_button = st.button('Submit', key="datafeed_upload_button")
 
             recreate_model_button = st.button('Recreate Model', key="recreate_model_button")
 
             if datafeed_upload_button:
-                if self.datafeed_file is not None:
-                    self.feed()
+                if self.datafeed_file is not None and passcode == "1234":
+                    print("yey")
+                    # self.feed()
+                elif passcode != "1234":
+                    st.toast('Wrong Passcode', icon='❌')
                 else:
                     st.toast('Upload File!', icon='❌')
 
@@ -42,9 +48,9 @@ class Datafeed:
                     status.update(label=f"Error: Something went wrong when creating a new model", state="error", expanded=False)
                     st.stop()
 
-                status.update(label=f"Data Feeding completed! ", state="complete", expanded=False)
+                status.update(label=f"Recreating Model completed! ", state="complete", expanded=False)
 
-                st.toast('Data Feeding Finished!', icon='🎉')
+                st.toast('Recreating Model Finished!', icon='🎉')
 
             except Exception as e:
                 status.update(label=f"Error: {e}", state="error", expanded=False)

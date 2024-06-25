@@ -1,6 +1,8 @@
 import streamlit as st
 from predict import load_model_predict
 import pandas as pd
+from datetime import datetime
+from time import sleep, time
 
 class Geocode:
     def __init__(self):
@@ -28,9 +30,13 @@ class Geocode:
                 
                 with open(result_file_path, "rb") as result_file:
                     result_byte = result_file.read()
+
+                current_date = datetime.now().strftime("%Y-%m-%d")
+
+                result_file_name = f"Geocode_result-{current_date}-{int(time())}.xlsx"
                     
-                if st.download_button(label='Download Output', data=result_byte, file_name="Geocode_result.xlsx", mime="application/octet-stream", key="result_file"):
-                    st.toast('Geocode_result.xlsx Downloaded!', icon='📥')
+                if st.download_button(label='Download Output', data=result_byte, file_name=result_file_name, mime="application/octet-stream", key="result_file"):
+                    st.toast(f'{result_file_name} Downloaded!', icon='📥')
 
                 status.update(label=f"Geocoding completed! ", state="complete", expanded=False)
 

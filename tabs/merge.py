@@ -1,7 +1,7 @@
 import streamlit as st
+from datetime import datetime
 from time import sleep, time
 import functions as func
-from datetime import datetime
 import base64
 import os
 from database import DB as db
@@ -122,7 +122,7 @@ class Merge:
 
                     main_df = pd.concat([main_df, temp_df], ignore_index=True)
 
-                    st.write(f'Merging {uploaded_file.name}')
+                    st.write(f'{uploaded_file.name} merged successfully')
                     
                 current_date = datetime.now().strftime("%Y-%m-%d")
 
@@ -138,16 +138,16 @@ class Merge:
 
                 main_df['ADDRESS'] = main_df['ADDRESS'].str.upper()
 
-                st.write("Loading model.joblib")
-                model = joblib.load('./source/model.joblib')
-
                 existing_mask = (main_df['AREA'].notna()) & (main_df['MUNICIPALITY'].notna()) & (main_df['MUNICIPALITY'].isna()) & (main_df['AREA'].isna())
                 
                 addresses = main_df.loc[~existing_mask & main_df['ADDRESS'].notna() & (main_df['ADDRESS'].str.len() >= 20), 'ADDRESS'].tolist()
 
-                st.write(f"Number of address to predict: {len(addresses)}")
-
                 if len(addresses) > 0:
+                    st.write(f"Number of address to predict: {len(addresses)}")
+
+                    st.write("Loading predictive model")
+                    model = joblib.load('./source/model.joblib')
+                    
                     prediction_mask = main_df['ADDRESS'].isin(addresses)
                     predictions = model.predict(addresses) 
                     
@@ -156,13 +156,21 @@ class Merge:
                     area_munis = [tuple(prediction.split('-', 1)) for prediction in predictions]
 
                     main_df.loc[prediction_mask, 'AREA'], main_df.loc[prediction_mask, 'MUNICIPALITY'] = zip(*area_munis)
+
+                else:
+                    st.write(f"No address to predict")
             
                 main_df.to_excel(output_file_path, index=False)
 
                 func.drop_row_with_one_cell(output_file_path)
+
+                st.write(f"Checking CHCODE and Campaign")
                 func.highlight_n_fill_missing_values(output_file_path, './source/campaign_list.json' )
 
+                st.write(f"Highlighting predictions")
                 func.highlight_n_check_prediction(output_file_path)
+
+                st.write(f"Autofit columns of excel")
                 func.auto_fit_columns(output_file_path)
 
                 with open(output_file_path, "rb") as output_file:

@@ -11,6 +11,7 @@ def load_model_predict(file_path):
     try:
         # Now, to use the trained model to predict area-muni and probability of addresses from an Excel file:
         # Load the model
+        st.write("Loading predictive model")
         model = joblib.load('source\\model.joblib')
 
         # Assume `addresses.xlsx` contains a column 'address' with the addresses to predict
@@ -18,6 +19,8 @@ def load_model_predict(file_path):
 
         # Drop rows with NaN values in 'address'
         df_to_predict.dropna(subset=['address'], inplace=True)
+
+        st.write("Loading predictive model")
         predictions = model.predict(df_to_predict['address'].astype(str))
 
         # Convert predictions to a list of tuples
@@ -40,7 +43,10 @@ def load_model_predict(file_path):
         # Saving the predictions to a new Excel file
         temp_df.to_excel(result_path, index=False)
 
+        st.write(f"Highlighting predictions")
         func.highlight_n_check_prediction(result_path)
+
+        st.write(f"Autofit columns of excel")
         func.auto_fit_columns(result_path)
 
         wb = load_workbook(result_path)
