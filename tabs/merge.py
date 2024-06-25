@@ -125,6 +125,9 @@ class Merge:
                     st.write(f'Merging {uploaded_file.name}')
                     
                 current_date = datetime.now().strftime("%Y-%m-%d")
+
+                if not os.path.exists('output'):
+                    os.makedirs('output')
                 
                 output_file_name = f"Output-{self.campaign_name}-{current_date}-{int(time())}.xlsx"
                 output_file_path = f"./output/{output_file_name}"
