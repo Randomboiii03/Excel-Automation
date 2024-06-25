@@ -180,9 +180,11 @@ class Merge:
                     st.toast(f'{output_file_name} Downloaded!', icon='📥')
 
                 status.update(label=f"Merging completed! ", state="complete", expanded=False)
+                st.balloons()
 
             except Exception as e:
                 status.update(label=f"Error: {e}", state="error", expanded=False)
+                st.snow()
 
                 if output_file_path:
                     os.remove(output_file_path)

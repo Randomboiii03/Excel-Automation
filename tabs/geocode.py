@@ -41,8 +41,10 @@ class Geocode:
                 status.update(label=f"Geocoding completed! ", state="complete", expanded=False)
 
                 st.toast('Geocoding Finished!', icon='🎉')
+                st.balloons()
                     
             except Exception as e:
                 status.update(label=f"Error: {e}", state="error", expanded=False)
+                st.snow()
 
         

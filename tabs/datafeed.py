@@ -50,9 +50,11 @@ class Datafeed:
                 status.update(label=f"Recreating Model completed! ", state="complete", expanded=False)
 
                 st.toast('Recreating Model Finished!', icon='🎉')
+                st.balloons()
 
             except Exception as e:
                 status.update(label=f"Error: {e}", state="error", expanded=False)
+                st.snow()
 
     def feed(self):
         st.toast('Starting Data Feeding!', icon='💨')
@@ -84,8 +86,10 @@ class Datafeed:
                 status.update(label=f"Data Feeding completed! ", state="complete", expanded=False)
 
                 st.toast('Data Feeding Finished!', icon='🎉')
+                st.balloons()
 
             except Exception as e:
                 status.update(label=f"Error: {e}", state="error", expanded=False)
+                st.snow()
 
     
