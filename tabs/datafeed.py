@@ -8,7 +8,7 @@ class Datafeed:
         with st.container(border=True):
             st.header('DATA FEED THINGS')
             
-            self.datafeed_file = st.file_uploader('Choose a XLXS file', type=['xlsx'])
+            self.datafeed_file = st.file_uploader('Choose a XLXS file', type=['xlsx'], key="datafeed_file_uploader")
             
             with st.popover("Upload"):
                 passcode = st.text_input("Type passcode:", type="password")

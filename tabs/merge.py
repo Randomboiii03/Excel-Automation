@@ -16,7 +16,7 @@ class Merge:
             st.header('MERGE THINGS')
 
             self.campaign_name = st.text_input("Campaign Name")
-            self.merge_files = st.file_uploader('Choose a XLXS file', accept_multiple_files=True, type=['xlsx'])
+            self.merge_files = st.file_uploader('Choose a XLXS file', accept_multiple_files=True, type=['xlsx'], key="merge_file_uploader")
 
             count = 0
 

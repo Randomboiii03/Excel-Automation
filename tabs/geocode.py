@@ -9,7 +9,7 @@ class Geocode:
         with st.form('geocode_form'):
             st.header('GEOCODE THINGS')
             
-            self.geocode_file = st.file_uploader('Choose a XLXS file', type=['xlsx'])
+            self.geocode_file = st.file_uploader('Choose a XLXS file', type=['xlsx'], key="geocode_file_uploader")
 
             geocode_upload_button = st.form_submit_button('Upload')
 
