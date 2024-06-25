@@ -19,8 +19,7 @@ class Datafeed:
 
             if datafeed_upload_button:
                 if self.datafeed_file is not None and passcode == "1234":
-                    print("yey")
-                    # self.feed()
+                    self.feed()
                 elif passcode != "1234":
                     st.toast('Wrong Passcode', icon='❌')
                 else:
