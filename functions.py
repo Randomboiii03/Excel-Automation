@@ -142,8 +142,9 @@ def highlight_n_check_prediction(excel_file_path):
 
         cell3.value = cell4.value = ''
 
-        if not address.strip() or len(address.strip()) < 10:
+        if not address.strip() or len(address.strip()) < 25:
             cell1.value = cell2.value = ''
+            cell1.fill = cell2.fill = PatternFill(start_color="ff4400", end_color="ff4400", fill_type="solid")
         else:
             area = str(row["AREA"]).lower()
             municipality = str(row["MUNICIPALITY"]).lower()
