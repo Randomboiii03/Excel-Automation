@@ -1,4 +1,5 @@
-import psycopg2 
+import psycopg2
+import streamlit as st
 
 class DB:
     def __init__(self):
@@ -18,9 +19,12 @@ class DB:
         try:
             area_munis, addresses = self.select()
             count = 0
-            
+
+            msg = st.toast("Inserting area-muni...")
+
             for _, row in df.iterrows():
-                print(row)
+                msg.toast(row)
+
                 if (row['area-muni'] not in area_munis and row['address'] not in addresses):
                     query = "INSERT INTO model (area_muni, address) VALUES (%s, %s) ON CONFLICT DO NOTHING"
                     self.cur.execute(query, (row['area-muni'], row['address']))

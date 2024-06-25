@@ -6,29 +6,6 @@ from openpyxl import load_workbook
 import pandas as pd
 import os
 
-
-def get_total_rows(file_path) -> int:
-    workbook = load_workbook(file_path)
-    worksheet = workbook.active
-    return worksheet.max_row
-
-def clean_string(input_string):
-    return re.sub(r'[^a-zA-Z0-9\s]', ' ', input_string).upper()
-
-def is_empty_or_spaces(s):
-    return s.replace(' ', '') == ''
-
-def compare_string(str1, str2, threshold=90):
-    similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(str2)).lower())
-    return similarity_ratio >= threshold
-
-def find_header(row_values, template_header):
-    for data in row_values:
-        for header in template_header:
-            if compare_string(data, header):
-                return True
-    return False
-
 def get_index_of_header(excel_file_path, template_header) -> int:
     sheet_data = pd.read_excel(excel_file_path, sheet_name=0, header=None)
     if sheet_data.empty:
@@ -37,10 +14,33 @@ def get_index_of_header(excel_file_path, template_header) -> int:
         if find_header(row.values, template_header):
             return index
     return -1
+    
+
+def find_header(row_values, template_header):
+    for data in row_values:
+        for header in template_header:
+            if compare_string(data, header):
+                return True
+    return False
+
+
+def clean_string(input_string):
+    return re.sub(r'[^a-zA-Z0-9\s]', ' ', input_string).upper()
+
+
+def compare_string(str1, str2, threshold=90):
+    similarity_ratio = fuzz.token_set_ratio(clean_string(str(str1)).lower(), clean_string(str(str2)).lower())
+    return similarity_ratio >= threshold
+
 
 def map_header(mapping, header):
     cleaned_header = clean_string(header)
     return mapping.get(cleaned_header, None)
+
+
+def is_empty_or_spaces(s):
+    return s.replace(' ', '') == ''
+
 
 def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
     with open(campaign_file_path, 'r') as file:
@@ -78,10 +78,12 @@ def highlight_n_fill_missing_values(excel_file_path, campaign_file_path):
                 
     book.save(excel_file_path)
 
+
 def drop_row_with_one_cell(excel_file_path):
     excel_data = pd.read_excel(excel_file_path)
     excel_data = excel_data[excel_data.count(axis=1) > 1]
     excel_data.to_excel(excel_file_path, index=False)
+
 
 def auto_fit_columns(excel_file_path):
     wb = load_workbook(excel_file_path)
@@ -111,6 +113,7 @@ def auto_fit_columns(excel_file_path):
                     
     wb.save(excel_file_path)
 
+
 def highlight_n_check_prediction(excel_file_path):
 
     def compare_address(str1, address, threshold=60):
@@ -137,13 +140,16 @@ def highlight_n_check_prediction(excel_file_path):
         cell3 = sheet.cell(row=row_index + 2, column=final_area_index)
         cell4 = sheet.cell(row=row_index + 2, column=autofield_date_index)
 
-        if not address.strip():
+        cell3.value = cell4.value = ''
+
+        if not address.strip() or len(address.strip()) < 10:
             cell1.value = cell2.value = ''
         else:
-            cell3.value = cell4.value = ''
-
             area = str(row["AREA"]).lower()
             municipality = str(row["MUNICIPALITY"]).lower()
+
+            if area == "ncr":
+                area = "manila"
 
             if compare_address(area, address) and compare_address(municipality, address):
                 cell1.fill = cell2.fill = PatternFill(start_color="ffa500", end_color="ffa500", fill_type="solid")
@@ -153,10 +159,3 @@ def highlight_n_check_prediction(excel_file_path):
                 cell2.fill = PatternFill(start_color="fffa00", end_color="fffa00", fill_type="solid")
 
     book.save(excel_file_path)
-
-def delete_requests_file(folder_path):
-    files_to_delete = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-    
-    for file_name in files_to_delete:
-        file_path = os.path.join(folder_path, file_name)
-        os.remove(file_path)

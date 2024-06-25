@@ -1,24 +1,4 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
+output/*
 
-# Secret keys
-instance/
-
-# Environment variables
-.env
-
-# Logs and databases
-*.log
-*.db
 *.joblib
-
-# User uploaded files
-uploads/
-
-# Virtual environment
-venv/
-
-# Database
-instance/
