@@ -10,29 +10,18 @@ class Datafeed:
             
             self.datafeed_file = st.file_uploader('Choose a XLXS file', type=['xlsx'], key="datafeed_file_uploader")
             
-            with st.popover("Upload"):
-                passcode = st.text_input("Type passcode:", type="password")
-
-                datafeed_upload_button = st.button('Submit', key="datafeed_upload_button")
+            datafeed_upload_button = st.button('Submit', key="datafeed_upload_button")
 
             recreate_model_button = st.button('Recreate Model', key="recreate_model_button")
 
             if datafeed_upload_button:
-                if self.datafeed_file is not None and passcode == "1234":
+                if self.datafeed_file is not None:
                     self.feed()
-                elif passcode != "1234":
-                    st.toast('Wrong Passcode', icon='❌')
                 else:
                     st.toast('Upload File!', icon='❌')
 
             if recreate_model_button:
                 self.recreate_model()
-
-        with open("./source/templates/template.xlsx", "rb") as template_file:
-            template_byte = template_file.read()
-
-        if st.download_button(label='Download Template', data=template_byte, file_name="datafeed_template.xlsx", mime="application/octet-stream", key="datafeed_template"):
-            st.toast('Template Downloaded!', icon='📥')
 
 
 
@@ -66,21 +55,21 @@ class Datafeed:
                 df = pd.read_excel(self.datafeed_file)
 
                 if list(df.columns) != ['area-muni','address']:
-                    status.update(label=f"Error: Uploaded file has the wrong column format", state="error", expanded=False)
+                    status.update(label=f":red[**Error:**] Uploaded file has the wrong column format, it must be column: :red[ **area-muni & address**] in small letter ", state="error", expanded=False)
                     st.stop()
 
                 inserted_data = db().insert(df)
 
                 if inserted_data < 0:
-                    status.update(label=f"Error: Something went wrong with database", state="error", expanded=False)
+                    status.update(label=f":red[**Error:**] Something went wrong with database", state="error", expanded=False)
                     st.stop()
                 
                 elif inserted_data == 0:
-                    status.update(label=f"Error: All data is already fed", state="error", expanded=False)
+                    status.update(label=f":red[**Error:**] All data is already fed", state="error", expanded=False)
                     st.stop()
 
                 if not train_model_save_joblib():
-                    status.update(label=f"Error: Something went wrong when creating a new model", state="error", expanded=False)
+                    status.update(label=f":red[**Error:**] Something went wrong when creating a new model", state="error", expanded=False)
                     st.stop()
 
                 status.update(label=f"Data Feeding completed! ", state="complete", expanded=False)
@@ -89,7 +78,7 @@ class Datafeed:
                 st.balloons()
 
             except Exception as e:
-                status.update(label=f"Error: {e}", state="error", expanded=False)
+                status.update(label=f":red[**Error:**] {e}", state="error", expanded=False)
                 st.snow()
 
     

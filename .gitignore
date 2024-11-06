@@ -5,3 +5,7 @@ output/*
 *.joblib
 
 venv/
+
+uploads/
+
+nohup.out
